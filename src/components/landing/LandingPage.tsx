@@ -31,8 +31,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         });
       },
       {
-        threshold: 0.25,
-        rootMargin: '0px 0px -40px 0px',
+        threshold: 0.1,
+        rootMargin: '0px 0px -10px 0px',
       }
     );
     sweepElements.forEach((el) => sweepObserver.observe(el));
@@ -49,8 +49,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         });
       },
       {
-        threshold: 0.15,
-        rootMargin: '0px 0px -30px 0px',
+        threshold: 0.1,
+        rootMargin: '0px 0px -10px 0px',
       }
     );
     revealElements.forEach((el) => revealObserver.observe(el));
@@ -71,34 +71,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
             <span>Position-Invariant Adjudication on GenLayer Studionet Preview</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-[#eef0f2] tracking-tight leading-[1.08]">
-            <span className="block mb-1 sm:mb-2">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-extrabold text-[#eef0f2] tracking-tight leading-[1.12] sm:leading-[1.14]">
+            {/* Line 1: What if your on-chain judge */}
+            <span className="block whitespace-normal sm:whitespace-nowrap mb-1.5 sm:mb-2">
               {heroWordsLine1.map((w, i) => (
                 <span
                   key={w}
-                  className="hero-word-reveal mr-2.5 sm:mr-3.5"
+                  className="hero-word-reveal mr-2 sm:mr-3"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   {w}
                 </span>
               ))}
             </span>
-            <span className="block mb-1 sm:mb-2">
+            {/* Line 2: changed its mind just because */}
+            <span className="block whitespace-normal sm:whitespace-nowrap mb-1.5 sm:mb-2">
               {heroWordsLine2.map((w, i) => (
                 <span
                   key={w}
-                  className="hero-word-reveal mr-2.5 sm:mr-3.5"
+                  className="hero-word-reveal mr-2 sm:mr-3"
                   style={{ animationDelay: `${(heroWordsLine1.length + i) * 60}ms` }}
                 >
                   {w}
                 </span>
               ))}
             </span>
-            <span className="block">
+            {/* Line 3: you asked in reverse? */}
+            <span className="block whitespace-normal sm:whitespace-nowrap">
               {heroWordsLine3.map((w, i) => (
                 <span
                   key={w}
-                  className="hero-word-reveal mr-2.5 sm:mr-3.5"
+                  className="hero-word-reveal mr-2 sm:mr-3"
                   style={{
                     animationDelay: `${(heroWordsLine1.length + heroWordsLine2.length + i) * 60}ms`,
                   }}
@@ -107,12 +110,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                 </span>
               ))}
               <span
-                className="hero-word-reveal glyph-light-sweep swept underline decoration-white/20 underline-offset-8"
+                className="hero-word-reveal"
                 style={{
                   animationDelay: `${(heroWordsLine1.length + heroWordsLine2.length + heroWordsLine3.length) * 60}ms`,
                 }}
               >
-                in reverse?
+                <span
+                  className="glyph-light-sweep underline decoration-white/20 underline-offset-8"
+                  data-text="in reverse?"
+                >
+                  in reverse?
+                </span>
               </span>
             </span>
           </h1>
@@ -142,7 +150,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
               The Fundamental Problem
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2]">
-              <span className="glyph-light-sweep">Why Single-Pass LLM Arbitration Fails</span>
+              <span className="glyph-light-sweep" data-text="Why Single-Pass LLM Arbitration Fails">
+                Why Single-Pass LLM Arbitration Fails
+              </span>
             </h2>
             <p className="text-sm sm:text-base text-[#9fa5b0] landing-item-body">
               Academic benchmarks reveal that commercial LLMs frequently favor whichever party is
@@ -198,7 +208,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
               Core Principles
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2]">
-              <span className="glyph-light-sweep">Three Guarantees for Autonomous Disputes</span>
+              <span className="glyph-light-sweep" data-text="Three Guarantees for Autonomous Disputes">
+                Three Guarantees for Autonomous Disputes
+              </span>
             </h2>
           </div>
 
@@ -246,7 +258,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
               <span>Infrastructure Architecture</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2]">
-              <span className="glyph-light-sweep">Why GenLayer is Mandatory for MirrorJudge</span>
+              <span className="glyph-light-sweep" data-text="Why GenLayer is Mandatory for MirrorJudge">
+                Why GenLayer is Mandatory for MirrorJudge
+              </span>
             </h2>
             <p className="text-sm sm:text-base text-[#9fa5b0] leading-relaxed landing-item-body">
               Standard EVM smart contracts cannot read natural language or perform semantic reasoning.
@@ -279,7 +293,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         {/* Call to Action Banner */}
         <section className="text-center py-12 px-6 silver-frame-raised space-y-4 landing-panel-reveal">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#eef0f2]">
-            <span className="glyph-light-sweep">Ready to test bias-cancelled dispute resolution?</span>
+            <span className="glyph-light-sweep" data-text="Ready to test bias-cancelled dispute resolution?">
+              Ready to test bias-cancelled dispute resolution?
+            </span>
           </h2>
           <p className="text-sm sm:text-base text-[#9fa5b0] max-w-lg mx-auto landing-item-body">
             Browse real on-chain cases without a wallet, or connect to Studionet to open a fresh dispute.
