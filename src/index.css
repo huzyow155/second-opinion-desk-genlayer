@@ -300,52 +300,130 @@
   animation: revealUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: var(--reveal-delay, 0s);
 }
+/* =========================================================================
+   Glyph-Only Text Light Sweep (Pure Typography, Zero Container Leakage)
+   ========================================================================= */
+.glyph-light-sweep,
+.text-sweep {
+  background-image: linear-gradient(
+    115deg,
+    #eef0f2 0%,
+    #eef0f2 38%,
+    #ffffff 50%,
+    #eef0f2 62%,
+    #eef0f2 100%
+  );
+  background-size: 260% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  display: inline-block;
+}
 
-/* Scroll-Following Soft Light Sweep */
-@keyframes lightSweepAnim {
+.glyph-light-sweep.swept,
+.text-sweep.swept {
+  animation: glyphSweep 3.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes glyphSweep {
   0% {
-    transform: translateX(-120%) skewX(-20deg);
-    opacity: 0;
-  }
-  25% {
-    opacity: 0.85;
-  }
-  75% {
-    opacity: 0.85;
+    background-position: 100% 0;
   }
   100% {
-    transform: translateX(220%) skewX(-20deg);
-    opacity: 0;
+    background-position: -100% 0;
   }
 }
 
-.text-sweep {
-  position: relative;
-  display: inline-block;
-  overflow: hidden;
-}
+/* =========================================================================
+   Landing Panels & Cards Motion Language (Aligned with /app Primitives)
+   ========================================================================= */
 
-.text-sweep::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 55%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.04) 20%,
-    rgba(255, 255, 255, 0.22) 50%,
-    rgba(255, 255, 255, 0.04) 80%,
-    transparent 100%
-  );
-  pointer-events: none;
+.landing-panel-reveal {
   opacity: 0;
+  transform: translateY(18px) scale(0.992);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.6s ease;
+  will-change: opacity, transform;
 }
 
-.text-sweep.swept::after {
-  animation: lightSweepAnim 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.landing-panel-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.landing-card-reveal {
+  opacity: 0;
+  transform: translateY(16px) scale(0.99);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease,
+              box-shadow 0.35s ease;
+  transition-delay: var(--card-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.landing-card-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.landing-card-reveal.revealed:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 14px 32px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* Content Hierarchy inside Landing Cards */
+.landing-item-title {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--card-delay, 0ms) + 60ms);
+}
+
+.landing-item-body {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--card-delay, 0ms) + 120ms);
+}
+
+.landing-item-meta {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--card-delay, 0ms) + 180ms);
+}
+
+.revealed .landing-item-title,
+.revealed .landing-item-body,
+.revealed .landing-item-meta,
+.revealed.landing-item-title,
+.revealed.landing-item-body,
+.revealed.landing-item-meta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .landing-panel-reveal {
+    transform: translateY(12px) scale(0.996);
+  }
+  .landing-card-reveal {
+    transform: translateY(10px) scale(0.995);
+  }
+  .landing-item-title,
+  .landing-item-body,
+  .landing-item-meta {
+    transform: translateY(4px);
+  }
 }
 
 /* Certificate and Verdict Transitions */
@@ -444,13 +522,25 @@
   .stagger-item,
   .certificate-reveal,
   .verdict-stage-1,
-  .verdict-stage-2 {
+  .verdict-stage-2,
+  .landing-panel-reveal,
+  .landing-card-reveal,
+  .landing-item-title,
+  .landing-item-body,
+  .landing-item-meta {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
+    transition: none !important;
   }
-  .text-sweep::after {
-    display: none !important;
+  .glyph-light-sweep,
+  .glyph-light-sweep.swept,
+  .text-sweep,
+  .text-sweep.swept {
+    background-position: 100% 0 !important;
+    animation: none !important;
+    -webkit-text-fill-color: initial !important;
+    color: #eef0f2 !important;
   }
   .progress-calm {
     animation: none !important;
