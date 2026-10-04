@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Scale,
   Sparkles,
@@ -17,17 +17,41 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
   const heroWordsLine2 = ['changed', 'its', 'mind', 'just', 'because'];
   const heroWordsLine3 = ['you', 'asked'];
 
+  // Scroll-following light sweep & viewport entrance observer
+  useEffect(() => {
+    const sweepElements = document.querySelectorAll<HTMLElement>('.text-sweep');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('swept');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.3,
+        rootMargin: '0px 0px -50px 0px',
+      }
+    );
+
+    sweepElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="min-h-screen py-12 sm:py-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20 sm:space-y-28">
         {/* Hero Section */}
         <section className="text-center max-w-4xl mx-auto space-y-7">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium silver-pill">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium silver-pill reveal-fade" style={{ '--reveal-delay': '100ms' } as React.CSSProperties}>
             <Sparkles className="w-3.5 h-3.5 text-stone-300" />
             <span>Position-Invariant Adjudication on GenLayer Studionet Preview</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-[#eef0f2] tracking-tight leading-[1.08]">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-[#eef0f2] tracking-tight leading-[1.08] text-sweep">
+
             <span className="block mb-1 sm:mb-2">
               {heroWordsLine1.map((w, i) => (
                 <span
@@ -97,10 +121,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
             <div className="text-xs font-bold text-stone-400 uppercase tracking-widest">
               The Fundamental Problem
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2]">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2] text-sweep">
               Why Single-Pass LLM Arbitration Fails
             </h2>
-            <p className="text-sm sm:text-base text-[#9fa5b0]">
+            <p className="text-sm sm:text-base text-[#9fa5b0] reveal-fade">
               Academic benchmarks reveal that commercial LLMs frequently favor whichever party is
               presented first, or switch outcomes when party aliases are swapped.
             </p>
@@ -108,7 +132,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Flawed Single-Pass Approach */}
-            <div className="silver-frame-inset p-6 space-y-4">
+            <div className="silver-frame-inset p-6 space-y-4 stagger-item" style={{ '--reveal-delay': '100ms' } as React.CSSProperties}>
               <div className="flex items-center gap-2 text-stone-300 font-bold text-sm sm:text-base">
                 <div className="w-5 h-5 rounded-md bg-stone-800 text-stone-400 flex items-center justify-center text-xs">
                   X
@@ -127,7 +151,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
             </div>
 
             {/* MirrorJudge Solution */}
-            <div className="silver-frame p-6 space-y-4 border-white/[0.18]">
+            <div className="silver-frame p-6 space-y-4 border-white/[0.18] stagger-item" style={{ '--reveal-delay': '200ms' } as React.CSSProperties}>
               <div className="flex items-center gap-2 text-[#eef0f2] font-bold text-sm sm:text-base">
                 <div className="w-5 h-5 rounded-md bg-white/[0.12] text-white flex items-center justify-center text-xs">
                   ✓
@@ -153,13 +177,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
             <div className="text-xs font-bold text-stone-400 uppercase tracking-widest">
               Core Principles
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2]">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2] text-sweep">
               Three Guarantees for Autonomous Disputes
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="silver-frame p-6 space-y-3.5">
+            <div className="silver-frame p-6 space-y-3.5 stagger-item" style={{ '--reveal-delay': '100ms' } as React.CSSProperties}>
               <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.10] text-[#eef0f2] flex items-center justify-center">
                 <Scale className="w-4.5 h-4.5" />
               </div>
@@ -170,7 +194,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
               </p>
             </div>
 
-            <div className="silver-frame p-6 space-y-3.5">
+            <div className="silver-frame p-6 space-y-3.5 stagger-item" style={{ '--reveal-delay': '200ms' } as React.CSSProperties}>
               <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.10] text-[#eef0f2] flex items-center justify-center">
                 <ShieldCheck className="w-4.5 h-4.5" />
               </div>
@@ -181,7 +205,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
               </p>
             </div>
 
-            <div className="silver-frame p-6 space-y-3.5">
+            <div className="silver-frame p-6 space-y-3.5 stagger-item" style={{ '--reveal-delay': '300ms' } as React.CSSProperties}>
               <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.10] text-[#eef0f2] flex items-center justify-center">
                 <Cpu className="w-4.5 h-4.5" />
               </div>
@@ -201,10 +225,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
               <Zap className="w-3.5 h-3.5 text-stone-300" />
               <span>Infrastructure Architecture</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2]">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2] text-sweep">
               Why GenLayer is Mandatory for MirrorJudge
             </h2>
-            <p className="text-sm sm:text-base text-[#9fa5b0] leading-relaxed">
+            <p className="text-sm sm:text-base text-[#9fa5b0] leading-relaxed reveal-fade">
               Standard EVM smart contracts cannot read natural language or perform semantic reasoning.
               Centralized oracle services introduce single points of failure. GenLayer solves this by
               allowing Python intelligent contracts to call natural-language processing directly inside the
@@ -213,19 +237,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs">
+            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs stagger-item" style={{ '--reveal-delay': '100ms' } as React.CSSProperties}>
               <div className="text-xs font-mono text-stone-300 font-bold mb-1">01 / GenVM Python</div>
               <div className="text-xs text-[#9fa5b0]">Native Python execution runtime with pure string storage</div>
             </div>
-            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs">
+            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs stagger-item" style={{ '--reveal-delay': '180ms' } as React.CSSProperties}>
               <div className="text-xs font-mono text-stone-300 font-bold mb-1">02 / Dual-Pass Consensus</div>
               <div className="text-xs text-[#9fa5b0]">Validators evaluate both passes before committing state</div>
             </div>
-            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs">
+            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs stagger-item" style={{ '--reveal-delay': '260ms' } as React.CSSProperties}>
               <div className="text-xs font-mono text-stone-300 font-bold mb-1">03 / Zero Gas Price</div>
               <div className="text-xs text-[#9fa5b0]">Transactions use 0 gas price on Studionet Preview</div>
             </div>
-            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs">
+            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs stagger-item" style={{ '--reveal-delay': '340ms' } as React.CSSProperties}>
               <div className="text-xs font-mono text-stone-300 font-bold mb-1">04 / Composable Consumer</div>
               <div className="text-xs text-[#9fa5b0]">Downstream contracts read certificates to trigger automated settlements</div>
             </div>
@@ -234,10 +258,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
 
         {/* Call to Action Banner */}
         <section className="text-center py-12 px-6 silver-frame-raised space-y-4">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#eef0f2]">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#eef0f2] text-sweep">
             Ready to test bias-cancelled dispute resolution?
           </h2>
-          <p className="text-sm sm:text-base text-[#9fa5b0] max-w-lg mx-auto">
+          <p className="text-sm sm:text-base text-[#9fa5b0] max-w-lg mx-auto reveal-fade">
             Browse real on-chain cases without a wallet, or connect to Studionet to open a fresh dispute.
           </p>
           <div>

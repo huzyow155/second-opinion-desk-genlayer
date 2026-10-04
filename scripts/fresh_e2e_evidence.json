@@ -1,0 +1,66 @@
+{
+  "caseId": "2f37ceadd998",
+  "title": "E2E Milestone Acceptance Verification 9062",
+  "party1": "0xC42474dC8F24E84688977F85c77a3f03158D0274",
+  "party2": "0x5BdF767DdF8946262ED533f7961Bb838E3643E0c",
+  "openTx": {
+    "hash": "0xe524425dbab204244582e79d56b9b93b985d386c0f05a7b6acf5542dfce6accd",
+    "status": "ACCEPTED",
+    "leaderExecution": "SUCCESS",
+    "elapsedSec": "7.25"
+  },
+  "ev1Tx": {
+    "hash": "0x65dfe1202bac428c0d8d3844f7172de7a6aac590dc892e686ae876717010091c",
+    "status": "ACCEPTED",
+    "leaderExecution": "SUCCESS",
+    "elapsedSec": "3.64"
+  },
+  "ev2Tx": {
+    "hash": "0x748147fe37c05a33032d5282f56eb8dddc64e74be3fc18beceb5c6724aa683ed",
+    "status": "ACCEPTED",
+    "leaderExecution": "SUCCESS",
+    "elapsedSec": "10.30"
+  },
+  "judgeTx": {
+    "hash": "0xfc3f8eb8e4c20b443118c9f7d6bb53de9a85043993cd38ee102a9ed61c235ea5",
+    "status": "ACCEPTED",
+    "leaderExecution": "SUCCESS",
+    "latencySec": "58.95"
+  },
+  "totalDurationSec": "90.21",
+  "certificate": {
+    "schema_version": "1.0",
+    "case_id": "2f37ceadd998",
+    "title": "E2E Milestone Acceptance Verification 9062",
+    "opener": "0xC42474dC8F24E84688977F85c77a3f03158D0274",
+    "opposing": "0x5BdF767DdF8946262ED533f7961Bb838E3643E0c",
+    "status": "JUDGED",
+    "config": {
+      "margin_bp": 1500,
+      "max_flips": 1,
+      "max_rounds": 3,
+      "criteria": [
+        {
+          "id": "milestone_deliverable",
+          "text": "Which party substantiated full delivery of agreed software milestone deliverables: PARTY_1 or PARTY_2?",
+          "weight_bp": 6000
+        },
+        {
+          "id": "spec_compliance",
+          "text": "Which party adhered to technical specifications and contract requirements: PARTY_1 or PARTY_2?",
+          "weight_bp": 4000
+        }
+      ]
+    },
+    "rounds": [
+      {
+        "n": 1,
+        "decision": "DECIDED|PARTY_1|STABLE"
+      }
+    ],
+    "current_decision": "DECIDED|PARTY_1|STABLE",
+    "is_decided": true,
+    "outcome": "PARTY_1"
+  },
+  "consumerOutcome": "PARTY_1"
+}

@@ -219,11 +219,33 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* Cinematic subtle typography reveal */
+/* =========================================================================
+   Cinematic Motion System & Reusable Utilities
+   ========================================================================= */
+
 @keyframes heroReveal {
   0% {
     opacity: 0;
     transform: translateY(14px);
+    letter-spacing: -0.02em;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: normal;
+  }
+}
+
+.hero-word-reveal {
+  display: inline-block;
+  opacity: 0;
+  animation: heroReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes revealUp {
+  0% {
+    opacity: 0;
+    transform: translateY(var(--reveal-distance, 12px));
   }
   100% {
     opacity: 1;
@@ -231,16 +253,207 @@
   }
 }
 
-.hero-word-reveal {
-  display: inline-block;
-  opacity: 0;
-  animation: heroReveal 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-word-reveal {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
+@keyframes revealFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }
+
+.reveal-up {
+  opacity: 0;
+  animation: revealUp var(--reveal-duration, 0.45s) var(--reveal-easing, cubic-bezier(0.16, 1, 0.3, 1)) forwards;
+  animation-delay: var(--reveal-delay, 0s);
+}
+
+.reveal-fade {
+  opacity: 0;
+  animation: revealFade var(--reveal-duration, 0.4s) ease forwards;
+  animation-delay: var(--reveal-delay, 0s);
+}
+
+.motion-panel {
+  opacity: 0;
+  animation: revealUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--reveal-delay, 0.05s);
+}
+
+@keyframes badgePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.motion-badge {
+  animation: badgePop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.stagger-item {
+  opacity: 0;
+  animation: revealUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--reveal-delay, 0s);
+}
+
+/* Scroll-Following Soft Light Sweep */
+@keyframes lightSweepAnim {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.85;
+  }
+  75% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+.text-sweep {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.text-sweep::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 20%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.04) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+  opacity: 0;
+}
+
+.text-sweep.swept::after {
+  animation: lightSweepAnim 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Certificate and Verdict Transitions */
+@keyframes certGlowArrival {
+  0% {
+    opacity: 0.6;
+    transform: translateY(6px);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.certificate-reveal {
+  animation: certGlowArrival 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes verdictPrimaryReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes verdictSecondaryReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.verdict-stage-1 {
+  opacity: 0;
+  animation: verdictPrimaryReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
+}
+
+.verdict-stage-2 {
+  opacity: 0;
+  animation: verdictSecondaryReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards;
+}
+
+/* Smooth Accordion Content Transition */
+.expand-content {
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+
+/* Calm Progress Bar Animation */
+@keyframes calmProgressSweep {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.progress-calm {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.35) 50%, rgba(255, 255, 255, 0.12) 100%);
+  background-size: 200% 100%;
+  animation: calmProgressSweep 3s ease infinite;
+}
+
+/* Criteria Total Confirmation Smooth Transition */
+.criteria-total-badge {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Reduced Motion Safety */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hero-word-reveal,
+  .reveal-up,
+  .reveal-fade,
+  .motion-panel,
+  .motion-badge,
+  .stagger-item,
+  .certificate-reveal,
+  .verdict-stage-1,
+  .verdict-stage-2 {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+  .text-sweep::after {
+    display: none !important;
+  }
+  .progress-calm {
+    animation: none !important;
+  }
+}
+

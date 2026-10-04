@@ -501,7 +501,7 @@ export const AppWorkbench: React.FC = () => {
     }
     if (decision.includes('STABLE')) {
       return (
-        <span className="status-badge-stable inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold">
+        <span className="status-badge-stable inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold motion-badge">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span>STABLE</span>
         </span>
@@ -509,7 +509,7 @@ export const AppWorkbench: React.FC = () => {
     }
     if (decision.includes('UNSTABLE')) {
       return (
-        <span className="status-badge-unstable inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold">
+        <span className="status-badge-unstable inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold motion-badge">
           <AlertTriangle className="w-4 h-4 text-rose-400" />
           <span>UNSTABLE</span>
         </span>
@@ -517,7 +517,7 @@ export const AppWorkbench: React.FC = () => {
     }
     if (decision.includes('INSUFFICIENT')) {
       return (
-        <span className="status-badge-insufficient inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold">
+        <span className="status-badge-insufficient inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold motion-badge">
           <Info className="w-4 h-4 text-blue-400" />
           <span>INSUFFICIENT EVIDENCE</span>
         </span>
@@ -525,14 +525,14 @@ export const AppWorkbench: React.FC = () => {
     }
     if (decision.includes('SPLIT')) {
       return (
-        <span className="status-badge-split inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold">
+        <span className="status-badge-split inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold motion-badge">
           <Scale className="w-4 h-4 text-amber-400" />
           <span>SPLIT VERDICT</span>
         </span>
       );
     }
     return (
-      <span className="silver-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium">
+      <span className="silver-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium motion-badge">
         {decision}
       </span>
     );
@@ -556,20 +556,20 @@ export const AppWorkbench: React.FC = () => {
         <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#eef0f2] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#eef0f2] tracking-tight reveal-up" style={{ '--reveal-delay': '50ms' } as React.CSSProperties}>
                 Dispute Workbench
               </h1>
-              <span className="silver-pill text-xs px-2.5 py-0.5 rounded-full font-mono text-stone-300 flex items-center gap-1.5">
+              <span className="silver-pill text-xs px-2.5 py-0.5 rounded-full font-mono text-stone-300 flex items-center gap-1.5 motion-badge" style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
                 <span>{STUDIONET_NAME}</span>
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#9fa5b0]">
+            <p className="text-xs sm:text-sm text-[#9fa5b0] reveal-fade" style={{ '--reveal-delay': '160ms' } as React.CSSProperties}>
               MirrorJudge does not require a payment value for case creation, evidence, or adjudication.
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 reveal-up" style={{ '--reveal-delay': '200ms' } as React.CSSProperties}>
             {isConnected ? (
               <div className="flex items-center gap-2">
                 <div className="text-xs font-mono text-[#9fa5b0] bg-[#121417] border border-white/[0.08] px-3 py-1.5 rounded-xl flex items-center gap-1.5">
@@ -598,7 +598,7 @@ export const AppWorkbench: React.FC = () => {
 
         {/* Action feedback banners */}
         {actionSuccessMsg && (
-          <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs sm:text-sm text-emerald-300">
+          <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs sm:text-sm text-emerald-300 reveal-up">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>{actionSuccessMsg}</span>
@@ -613,7 +613,7 @@ export const AppWorkbench: React.FC = () => {
         )}
 
         {actionError && (
-          <div className="p-3.5 rounded-xl bg-rose-950/30 border border-rose-500/30 flex items-center justify-between gap-3 text-xs sm:text-sm text-rose-300">
+          <div className="p-3.5 rounded-xl bg-rose-950/30 border border-rose-500/30 flex items-center justify-between gap-3 text-xs sm:text-sm text-rose-300 reveal-up">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{actionError}</span>
@@ -632,12 +632,12 @@ export const AppWorkbench: React.FC = () => {
           {/* LEFT: Actions and Workflow (5 cols) */}
           <div className="lg:col-span-5 space-y-4">
             {/* 4 Clean Tabs: Cases | Open | Evidence | Judge */}
-            <div className="p-1 bg-[#121417]/90 rounded-xl flex gap-1 border border-white/[0.08]">
+            <div className="p-1 bg-[#121417]/90 rounded-xl flex gap-1 border border-white/[0.08] reveal-up" style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
               {(['cases', 'open', 'evidence', 'judge'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-1.5 px-3 text-xs sm:text-sm font-semibold rounded-lg transition capitalize cursor-pointer text-center ${
+                  className={`flex-1 py-1.5 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 capitalize cursor-pointer text-center ${
                     activeTab === tab
                       ? 'bg-white/[0.12] text-white border border-white/[0.18] shadow-xs'
                       : 'text-[#9fa5b0] hover:text-white hover:bg-white/[0.04]'
@@ -650,10 +650,10 @@ export const AppWorkbench: React.FC = () => {
 
             {/* TAB 1: CASES (Compact Demos + Lookup) */}
             {activeTab === 'cases' && (
-              <div className="silver-frame p-5 space-y-4">
+              <div className="silver-frame p-5 space-y-4 motion-panel">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-[#eef0f2] text-sm sm:text-base">On-Chain Demos</h3>
-                  <span className="silver-pill text-[11px] font-semibold px-2 py-0.5 rounded-md text-stone-300">
+                  <span className="silver-pill text-[11px] font-semibold px-2 py-0.5 rounded-md text-stone-300 motion-badge">
                     No Wallet Required
                   </span>
                 </div>
@@ -663,11 +663,12 @@ export const AppWorkbench: React.FC = () => {
                   {/* Demo A */}
                   <button
                     onClick={() => loadCaseData(VERIFIED_DEMO_CASES.DEMO_A.id)}
-                    className={`w-full p-3.5 rounded-xl border text-left transition cursor-pointer ${
+                    className={`w-full p-3.5 rounded-xl border text-left transition cursor-pointer stagger-item ${
                       inspectedCaseId === VERIFIED_DEMO_CASES.DEMO_A.id
                         ? 'bg-white/[0.08] border-white/[0.25] shadow-[0_0_12px_rgba(255,255,255,0.04)]'
                         : 'bg-[#121417]/70 border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03]'
                     }`}
+                    style={{ '--reveal-delay': '60ms' } as React.CSSProperties}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-stone-300">Demo A</span>
@@ -679,7 +680,7 @@ export const AppWorkbench: React.FC = () => {
                       Clear-cut milestone delivery verified via git logs.
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-semibold text-emerald-400">
+                      <span className="text-xs font-mono font-semibold text-emerald-400 motion-badge">
                         DECIDED · PARTY 1 · STABLE
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
@@ -689,11 +690,12 @@ export const AppWorkbench: React.FC = () => {
                   {/* Demo B */}
                   <button
                     onClick={() => loadCaseData(VERIFIED_DEMO_CASES.DEMO_B.id)}
-                    className={`w-full p-3.5 rounded-xl border text-left transition cursor-pointer ${
+                    className={`w-full p-3.5 rounded-xl border text-left transition cursor-pointer stagger-item ${
                       inspectedCaseId === VERIFIED_DEMO_CASES.DEMO_B.id
                         ? 'bg-white/[0.08] border-white/[0.25] shadow-[0_0_12px_rgba(255,255,255,0.04)]'
                         : 'bg-[#121417]/70 border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03]'
                     }`}
+                    style={{ '--reveal-delay': '140ms' } as React.CSSProperties}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-stone-300">Demo B</span>
@@ -705,7 +707,7 @@ export const AppWorkbench: React.FC = () => {
                       Balanced deliverable landing within tolerance threshold.
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-semibold text-amber-400">
+                      <span className="text-xs font-mono font-semibold text-amber-400 motion-badge">
                         DECIDED · SPLIT · STABLE
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
@@ -715,11 +717,12 @@ export const AppWorkbench: React.FC = () => {
                   {/* Demo Escalated */}
                   <button
                     onClick={() => loadCaseData(VERIFIED_DEMO_CASES.DEMO_ESCALATED.id)}
-                    className={`w-full p-3.5 rounded-xl border text-left transition cursor-pointer ${
+                    className={`w-full p-3.5 rounded-xl border text-left transition cursor-pointer stagger-item ${
                       inspectedCaseId === VERIFIED_DEMO_CASES.DEMO_ESCALATED.id
                         ? 'bg-white/[0.08] border-white/[0.25] shadow-[0_0_12px_rgba(255,255,255,0.04)]'
                         : 'bg-[#121417]/70 border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03]'
                     }`}
+                    style={{ '--reveal-delay': '220ms' } as React.CSSProperties}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-stone-300">Demo C · Escalation</span>
@@ -731,7 +734,7 @@ export const AppWorkbench: React.FC = () => {
                       Multi-round proof escalation via supplemental audit telemetry.
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-semibold text-blue-300">
+                      <span className="text-xs font-mono font-semibold text-blue-300 motion-badge">
                         01 INSUFFICIENT &rarr; 02 STABLE
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
@@ -740,7 +743,7 @@ export const AppWorkbench: React.FC = () => {
                 </div>
 
                 {/* Custom ID Lookup & Recent Cases (Integrated inside Cases tab) */}
-                <div className="pt-3 border-t border-white/[0.08] space-y-3">
+                <div className="pt-3 border-t border-white/[0.08] space-y-3 stagger-item" style={{ '--reveal-delay': '280ms' } as React.CSSProperties}>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -785,8 +788,8 @@ export const AppWorkbench: React.FC = () => {
 
             {/* TAB 2: OPEN CASE */}
             {activeTab === 'open' && (
-              <form onSubmit={handleOpenCase} className="silver-frame p-5 space-y-4">
-                <div className="space-y-1">
+              <form onSubmit={handleOpenCase} className="silver-frame p-5 space-y-4 motion-panel">
+                <div className="space-y-1 stagger-item" style={{ '--reveal-delay': '40ms' } as React.CSSProperties}>
                   <h3 className="font-bold text-[#eef0f2] text-sm sm:text-base">Open Dispute Case</h3>
                   <p className="text-xs text-[#9fa5b0]">
                     Configures weighted criteria and deterministic aliases for Party 1 &amp; Party 2.
@@ -794,21 +797,21 @@ export const AppWorkbench: React.FC = () => {
                 </div>
 
                 {openError && (
-                  <div className="p-3 bg-rose-950/30 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2">
+                  <div className="p-3 bg-rose-950/30 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2 reveal-up">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
                     <span>{openError}</span>
                   </div>
                 )}
 
                 {openSuccessMsg && (
-                  <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-start gap-2">
+                  <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-start gap-2 reveal-up">
                     <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
                     <span>{openSuccessMsg}</span>
                   </div>
                 )}
 
                 <div className="space-y-3">
-                  <div>
+                  <div className="stagger-item" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
                     <label className="block text-xs font-medium text-[#9fa5b0] mb-1">
                       Dispute Title
                     </label>
@@ -822,7 +825,7 @@ export const AppWorkbench: React.FC = () => {
                     />
                   </div>
 
-                  <div>
+                  <div className="stagger-item" style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
                     <label className="block text-xs font-medium text-[#9fa5b0] mb-1">
                       Opposing Address (Party 2)
                     </label>
@@ -836,7 +839,7 @@ export const AppWorkbench: React.FC = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 stagger-item" style={{ '--reveal-delay': '160ms' } as React.CSSProperties}>
                     <div>
                       <label className="block text-[11px] font-medium text-[#9fa5b0] mb-1">
                         Party 1 Aliases
@@ -862,11 +865,15 @@ export const AppWorkbench: React.FC = () => {
                   </div>
 
                   {/* Criteria Builder */}
-                  <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+                  <div className="space-y-2 pt-2 border-t border-white/[0.08] stagger-item" style={{ '--reveal-delay': '200ms' } as React.CSSProperties}>
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-medium text-[#eef0f2]">
                         Criteria ({criteria.length}/4) ·{' '}
-                        <span className={totalCriteriaWeight === 10000 ? 'text-emerald-400 font-mono font-bold' : 'text-rose-400 font-mono font-bold'}>
+                        <span className={`px-2 py-0.5 rounded-md font-mono font-bold text-xs criteria-total-badge ${
+                          totalCriteriaWeight === 10000
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                        }`}>
                           {(totalCriteriaWeight / 100).toFixed(0)}% allocated
                         </span>
                       </span>
@@ -880,7 +887,7 @@ export const AppWorkbench: React.FC = () => {
                     </div>
 
                     {criteria.map((c, idx) => (
-                      <div key={idx} className="p-2.5 rounded-lg silver-frame-inset space-y-1.5">
+                      <div key={idx} className="p-2.5 rounded-lg silver-frame-inset space-y-1.5 transition-all duration-200">
                         <div className="flex items-center justify-between text-xs">
                           <span className="text-[#9fa5b0]">Criterion #{idx + 1}</span>
                           <div className="flex items-center gap-1">
@@ -934,20 +941,22 @@ export const AppWorkbench: React.FC = () => {
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={!isConnected || totalCriteriaWeight !== 10000}
-                  className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-xs"
-                >
-                  {!isConnected ? 'Connect Wallet to Open Case' : 'Open Dispute on Studionet'}
-                </button>
+                <div className="stagger-item pt-1" style={{ '--reveal-delay': '250ms' } as React.CSSProperties}>
+                  <button
+                    type="submit"
+                    disabled={!isConnected || totalCriteriaWeight !== 10000}
+                    className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-xs"
+                  >
+                    {!isConnected ? 'Connect Wallet to Open Case' : 'Open Dispute on Studionet'}
+                  </button>
+                </div>
               </form>
             )}
 
             {/* TAB 3: ADD EVIDENCE */}
             {activeTab === 'evidence' && (
-              <form onSubmit={handleAddEvidence} className="silver-frame p-5 space-y-4">
-                <div className="flex items-center justify-between">
+              <form onSubmit={handleAddEvidence} className="silver-frame p-5 space-y-4 motion-panel">
+                <div className="flex items-center justify-between stagger-item" style={{ '--reveal-delay': '40ms' } as React.CSSProperties}>
                   <div className="space-y-0.5">
                     <h3 className="font-bold text-[#eef0f2] text-sm sm:text-base">Submit Evidence</h3>
                     <p className="text-xs text-[#9fa5b0]">Up to 3 entries per party (&le;1200 chars each)</p>
@@ -961,27 +970,27 @@ export const AppWorkbench: React.FC = () => {
                 </div>
 
                 {evidenceError && (
-                  <div className="p-3 bg-rose-950/30 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2">
+                  <div className="p-3 bg-rose-950/30 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2 reveal-up">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
                     <span>{evidenceError}</span>
                   </div>
                 )}
 
                 {evidenceSuccessMsg && (
-                  <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-start gap-2">
+                  <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-start gap-2 reveal-up">
                     <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
                     <span>{evidenceSuccessMsg}</span>
                   </div>
                 )}
 
                 {isConnected && currentRole === 'OBSERVER' && (
-                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300/90 leading-relaxed">
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300/90 leading-relaxed reveal-fade">
                     Connected address is neither Opener nor Opposing party on this case. Switch wallet to Party 1 or Party 2 to submit evidence.
                   </div>
                 )}
 
                 <div className="space-y-3">
-                  <div>
+                  <div className="stagger-item" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
                     <label className="block text-xs font-medium text-[#9fa5b0] mb-1">Target Case ID</label>
                     <input
                       type="text"
@@ -993,10 +1002,10 @@ export const AppWorkbench: React.FC = () => {
                     />
                   </div>
 
-                  <div>
+                  <div className="stagger-item" style={{ '--reveal-delay': '140ms' } as React.CSSProperties}>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-xs font-medium text-[#9fa5b0]">Verifiable Facts &amp; Quotes</label>
-                      <span className={`text-[11px] font-mono ${evidenceText.length > 1200 ? 'text-rose-400 font-bold' : 'text-[#6c727d]'}`}>
+                      <span className={`text-[11px] font-mono transition-colors ${evidenceText.length > 1200 ? 'text-rose-400 font-bold' : 'text-[#6c727d]'}`}>
                         {evidenceText.length} / 1200
                       </span>
                     </div>
@@ -1011,27 +1020,34 @@ export const AppWorkbench: React.FC = () => {
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={!isConnected || evidenceText.length === 0 || evidenceText.length > 1200 || currentRole === 'OBSERVER'}
-                  className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-xs"
-                >
-                  {!isConnected ? 'Connect Wallet' : 'Submit Evidence Entry'}
-                </button>
+                <div className="stagger-item pt-1" style={{ '--reveal-delay': '200ms' } as React.CSSProperties}>
+                  <button
+                    type="submit"
+                    disabled={!isConnected || evidenceText.length === 0 || evidenceText.length > 1200 || currentRole === 'OBSERVER'}
+                    className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-xs"
+                  >
+                    {!isConnected ? 'Connect Wallet' : 'Submit Evidence Entry'}
+                  </button>
+                </div>
               </form>
             )}
 
             {/* TAB 4: JUDGE ACTION */}
             {activeTab === 'judge' && (
-              <div className="silver-frame p-5 space-y-4">
-                <div className="space-y-1">
+              <div className="silver-frame p-5 space-y-4 motion-panel">
+                <div className="space-y-1 stagger-item" style={{ '--reveal-delay': '40ms' } as React.CSSProperties}>
                   <h3 className="font-bold text-[#eef0f2] text-sm sm:text-base">Execute Judge Consensus</h3>
                   <p className="text-xs text-[#9fa5b0]">
                     Triggers dual-pass non-deterministic LLM evaluation under validator consensus.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl silver-frame-inset space-y-2 text-xs">
+                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2 reveal-up" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
+                  <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="font-semibold">Ready to run mirrored adjudication</span>
+                </div>
+
+                <div className="p-3.5 rounded-xl silver-frame-inset space-y-2 text-xs stagger-item" style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
                   <div className="flex items-center justify-between">
                     <span className="text-[#9fa5b0]">Target Case ID:</span>
                     <span className="font-mono font-bold text-[#eef0f2]">{inspectedCaseId || 'None'}</span>
@@ -1046,40 +1062,56 @@ export const AppWorkbench: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-white/[0.03] border border-white/[0.08] text-xs text-[#9fa5b0] space-y-1.5 leading-relaxed">
-                  <div className="font-semibold text-stone-200">Adjudication Pipeline:</div>
-                  <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                    <div>1. Canonical evaluation pass</div>
-                    <div>2. Mirrored inverted pass</div>
-                    <div>3. Quote grounding check</div>
-                    <div>4. Validator committee agreement</div>
+                <div className="space-y-2 pt-1 stagger-item" style={{ '--reveal-delay': '160ms' } as React.CSSProperties}>
+                  <div className="text-[11px] font-bold text-stone-400 uppercase tracking-wider">
+                    Adjudication Process Sequence:
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className="p-2.5 rounded-lg silver-frame-inset border border-white/[0.08] space-y-1">
+                      <div className="font-mono font-bold text-stone-200 text-[11px]">01 / Canonical Pass</div>
+                      <div className="text-[11px] text-[#9fa5b0]">Evaluates facts with Party 1 in primary position</div>
+                    </div>
+                    <div className="p-2.5 rounded-lg silver-frame-inset border border-white/[0.08] space-y-1">
+                      <div className="font-mono font-bold text-stone-200 text-[11px]">02 / Mirrored Pass</div>
+                      <div className="text-[11px] text-[#9fa5b0]">Systematically inverts parties to detect order bias</div>
+                    </div>
+                    <div className="p-2.5 rounded-lg silver-frame-inset border border-white/[0.08] space-y-1">
+                      <div className="font-mono font-bold text-stone-200 text-[11px]">03 / Validator Consensus</div>
+                      <div className="text-[11px] text-[#9fa5b0]">Independent GenVM nodes agree on stability delta</div>
+                    </div>
+                    <div className="p-2.5 rounded-lg silver-frame-inset border border-white/[0.08] space-y-1">
+                      <div className="font-mono font-bold text-stone-200 text-[11px]">04 / Read Certificate</div>
+                      <div className="text-[11px] text-[#9fa5b0]">Issues position-invariant stability certificate</div>
+                    </div>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => handleTriggerJudge(inspectedCaseId)}
-                  disabled={!isConnected || !inspectedCaseId}
-                  className="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-md flex items-center justify-center gap-2"
-                >
-                  <Gavel className="w-4 h-4" />
-                  <span>Execute judge({inspectedCaseId.substring(0, 6)}...)</span>
-                </button>
+                <div className="stagger-item pt-1" style={{ '--reveal-delay': '220ms' } as React.CSSProperties}>
+                  <button
+                    onClick={() => handleTriggerJudge(inspectedCaseId)}
+                    disabled={!isConnected || !inspectedCaseId}
+                    className="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-md flex items-center justify-center gap-2"
+                  >
+                    <Gavel className="w-4 h-4" />
+                    <span>Execute judge({inspectedCaseId.substring(0, 6)}...)</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
 
           {/* RIGHT: Authoritative Case Inspection & Stability Certificate (7 cols) */}
           <div className="lg:col-span-7">
-            <div className="silver-frame-raised p-6 sm:p-7 space-y-6">
+            <div key={inspectedCaseId} className="silver-frame-raised p-6 sm:p-7 space-y-6 certificate-reveal">
               {/* Header: Title and refresh */}
               <div className="flex items-start justify-between gap-4 pb-4 border-b border-white/[0.08]">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="silver-pill text-xs font-mono px-2 py-0.5 rounded font-semibold text-stone-300">
+                    <span className="silver-pill text-xs font-mono px-2 py-0.5 rounded font-semibold text-stone-300 motion-badge">
                       ID: {inspectedCaseId}
                     </span>
                     {caseRecord && (
-                      <span className="text-xs px-2 py-0.5 rounded font-bold bg-white/[0.06] border border-white/[0.10] text-[#eef0f2]">
+                      <span className="text-xs px-2 py-0.5 rounded font-bold bg-white/[0.06] border border-white/[0.10] text-[#eef0f2] motion-badge">
                         Status: {caseRecord.status}
                       </span>
                     )}
@@ -1101,13 +1133,13 @@ export const AppWorkbench: React.FC = () => {
 
               {/* Error indicator */}
               {caseLoadError && (
-                <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2">
+                <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2 reveal-up">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
                   <span>{caseLoadError}</span>
                 </div>
               )}
 
-              {/* Dominant Verdict & Stability Banner */}
+              {/* Dominant Verdict & Stability Banner with Sequential Reveal */}
               <div className="p-4 sm:p-5 rounded-xl silver-frame-inset space-y-2.5">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">
@@ -1116,14 +1148,27 @@ export const AppWorkbench: React.FC = () => {
                   {renderStabilityBadge(activeDecision)}
                 </div>
 
-                <div className="text-sm sm:text-base font-semibold text-[#eef0f2]">
-                  {getStabilityExplanation(activeDecision)}
+                <div className="space-y-1">
+                  <div className="text-xl sm:text-2xl font-extrabold text-[#eef0f2] tracking-tight verdict-stage-1">
+                    {activeDecision.includes('STABLE')
+                      ? 'STABLE CERTIFICATE'
+                      : activeDecision.includes('UNSTABLE')
+                      ? 'UNSTABLE CERTIFICATE'
+                      : activeDecision.includes('INSUFFICIENT')
+                      ? 'INSUFFICIENT EVIDENCE'
+                      : activeDecision.includes('SPLIT')
+                      ? 'SPLIT DETERMINATION'
+                      : 'STATUS PENDING'}
+                  </div>
+                  <div className="text-sm sm:text-base font-medium text-stone-300 verdict-stage-2">
+                    {getStabilityExplanation(activeDecision)}
+                  </div>
                 </div>
 
                 {activeDecision && (
-                  <div className="text-xs text-[#9fa5b0] pt-1 border-t border-white/[0.06]">
-                    On-chain Decision String:{' '}
-                    <code className="font-mono font-bold text-white bg-white/[0.08] px-1.5 py-0.5 rounded">
+                  <div className="text-xs text-[#9fa5b0] pt-1.5 border-t border-white/[0.06] flex items-center justify-between flex-wrap gap-2">
+                    <span>On-chain Decision String:</span>
+                    <code className="font-mono font-bold text-white bg-white/[0.08] px-2 py-0.5 rounded border border-white/[0.12]">
                       {activeDecision}
                     </code>
                   </div>
@@ -1132,23 +1177,24 @@ export const AppWorkbench: React.FC = () => {
 
               {/* Compact Timeline Round History */}
               {caseRecord?.rounds && caseRecord.rounds.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 stagger-item" style={{ '--reveal-delay': '100ms' } as React.CSSProperties}>
                   <span className="text-xs font-bold text-stone-300 uppercase tracking-wider block">
                     Consensus Round History
                   </span>
                   <div className="space-y-1.5">
-                    {caseRecord.rounds.map((rnd) => (
+                    {caseRecord.rounds.map((rnd, rIdx) => (
                       <div
                         key={rnd.n}
-                        className="p-2.5 rounded-lg silver-frame-inset flex items-center justify-between text-xs sm:text-sm"
+                        className="p-2.5 rounded-lg silver-frame-inset flex items-center justify-between text-xs sm:text-sm stagger-item"
+                        style={{ '--reveal-delay': `${rIdx * 70 + 100}ms` } as React.CSSProperties}
                       >
                         <div className="flex items-center gap-2 font-mono">
-                          <span className="w-5 h-5 rounded bg-white/[0.08] border border-white/[0.12] text-white flex items-center justify-center font-bold text-[10px]">
+                          <span className="w-5 h-5 rounded bg-white/[0.08] border border-white/[0.12] text-white flex items-center justify-center font-bold text-[10px] motion-badge">
                             {rnd.n < 10 ? `0${rnd.n}` : rnd.n}
                           </span>
                           <span className="text-[#9fa5b0]">Round {rnd.n}</span>
                         </div>
-                        <div className="font-mono font-semibold text-emerald-400 text-xs sm:text-[13px]">
+                        <div className="font-mono font-semibold text-emerald-400 text-xs sm:text-[13px] motion-badge">
                           {rnd.decision}
                         </div>
                       </div>
@@ -1159,15 +1205,16 @@ export const AppWorkbench: React.FC = () => {
 
               {/* Criteria Breakdown */}
               {caseRecord?.criteria && (
-                <div className="space-y-2">
+                <div className="space-y-2 stagger-item" style={{ '--reveal-delay': '150ms' } as React.CSSProperties}>
                   <span className="text-xs font-bold text-stone-300 uppercase tracking-wider block">
                     Adjudication Criteria &amp; Weights
                   </span>
                   <div className="space-y-1.5">
-                    {caseRecord.criteria.map((c) => (
+                    {caseRecord.criteria.map((c, cIdx) => (
                       <div
                         key={c.id}
-                        className="p-2.5 rounded-lg silver-frame-inset flex items-center justify-between text-xs sm:text-sm"
+                        className="p-2.5 rounded-lg silver-frame-inset flex items-center justify-between text-xs sm:text-sm stagger-item"
+                        style={{ '--reveal-delay': `${cIdx * 50 + 150}ms` } as React.CSSProperties}
                       >
                         <div className="pr-3">
                           <span className="text-[#eef0f2]">{c.text}</span>
@@ -1183,7 +1230,7 @@ export const AppWorkbench: React.FC = () => {
 
               {/* Evidence Log with Expand/Collapse */}
               {caseRecord?.evidence && (
-                <div className="space-y-2">
+                <div className="space-y-2 stagger-item" style={{ '--reveal-delay': '200ms' } as React.CSSProperties}>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-stone-300 uppercase tracking-wider">
                       Submitted Evidence ({caseRecord.evidence.length})
@@ -1205,7 +1252,8 @@ export const AppWorkbench: React.FC = () => {
                         return (
                           <div
                             key={idx}
-                            className="p-3 rounded-lg silver-frame-inset text-xs sm:text-sm space-y-1.5"
+                            className="p-3 rounded-lg silver-frame-inset text-xs sm:text-sm space-y-1.5 stagger-item expand-content"
+                            style={{ '--reveal-delay': `${idx * 60 + 200}ms` } as React.CSSProperties}
                           >
                             <div className="flex items-center justify-between text-xs">
                               <span
@@ -1245,7 +1293,7 @@ export const AppWorkbench: React.FC = () => {
 
               {/* Actor Addresses & Aliases */}
               {caseRecord && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs stagger-item" style={{ '--reveal-delay': '250ms' } as React.CSSProperties}>
                   <div className="p-3 rounded-lg silver-frame-inset space-y-1">
                     <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">Party 1</span>
                     <span className="font-mono text-[#eef0f2] block truncate" title={caseRecord.opener}>
@@ -1269,7 +1317,7 @@ export const AppWorkbench: React.FC = () => {
               )}
 
               {/* Secondary Actions: Downstream Consumer & Case Finalize (compact, placed lower) */}
-              <div className="pt-3 border-t border-white/[0.08] space-y-3">
+              <div className="pt-3 border-t border-white/[0.08] space-y-3 reveal-fade" style={{ '--reveal-delay': '300ms' } as React.CSSProperties}>
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5 text-stone-400">
                     <Building className="w-3.5 h-3.5" />
