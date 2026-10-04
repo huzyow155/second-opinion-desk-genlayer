@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import {
   STUDIONET_CHAIN_ID,
@@ -31,7 +31,7 @@ export interface WalletContextValue {
   connectWallet: (wallet: EIP6963ProviderDetail) => Promise<void>;
   disconnectWallet: () => void;
   switchToStudionet: () => Promise<boolean>;
-  requestAccountSwitch: () => Promise<void>;
+  requestAccountChangeInCurrentWallet: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextValue | undefined>(undefined);
@@ -45,13 +45,19 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [chainId, setChainId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Keep a ref to previous listener unbinders to prevent stale event cross-talk
+  const activeListenersRef = useRef<{ accountsChanged?: any; chainChanged?: any; provider?: any }>({});
+
   // EIP-6963 announcement listener
   useEffect(() => {
     const handleAnnounce = (event: Event) => {
       const customEvent = event as CustomEvent<EIP6963ProviderDetail>;
-      if (!customEvent.detail || !customEvent.detail.info) return;
+      if (!customEvent.detail || !customEvent.detail.info || !customEvent.detail.provider) return;
 
       const detail = customEvent.detail;
+      // Only accept if provider has callable request method
+      if (typeof detail.provider.request !== 'function') return;
+
       setDiscoveredWallets((prev) => {
         const exists = prev.some(
           (w) => w.info.rdns === detail.info.rdns || w.info.uuid === detail.info.uuid
@@ -64,18 +70,20 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     window.addEventListener('eip6963:announceProvider', handleAnnounce);
     window.dispatchEvent(new Event('eip6963:requestProvider'));
 
-    // Check for standard window.ethereum fallback
-    if (typeof window !== 'undefined' && (window as any).ethereum) {
+    // Bounded legacy fallback: only if window.ethereum exists and is callable
+    if (typeof window !== 'undefined' && (window as any).ethereum && typeof (window as any).ethereum.request === 'function') {
       const eth = (window as any).ethereum;
+      const name = eth.isMetaMask ? 'MetaMask' : (eth.isRabby ? 'Rabby Wallet' : 'Injected Browser Wallet');
       const fallbackWallet: EIP6963ProviderDetail = {
         info: {
-          uuid: 'injected-metamask-fallback',
-          name: eth.isMetaMask ? 'MetaMask' : (eth.isRabby ? 'Rabby Wallet' : 'Injected Browser Wallet'),
-          icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%2310b981" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="3"/><path d="M16 12h.01"/></svg>',
-          rdns: 'io.metamask',
+          uuid: 'injected-browser-wallet',
+          name,
+          icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%239aa1aa" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="3"/><path d="M16 12h.01"/></svg>',
+          rdns: eth.isMetaMask ? 'io.metamask' : 'injected.ethereum',
         },
         provider: eth,
       };
+
       setDiscoveredWallets((prev) => {
         if (prev.length === 0) return [fallbackWallet];
         return prev;
@@ -98,14 +106,24 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [status, account]);
 
+  const cleanupListeners = useCallback(() => {
+    const { provider, accountsChanged, chainChanged } = activeListenersRef.current;
+    if (provider && provider.removeListener) {
+      if (accountsChanged) provider.removeListener('accountsChanged', accountsChanged);
+      if (chainChanged) provider.removeListener('chainChanged', chainChanged);
+    }
+    activeListenersRef.current = {};
+  }, []);
+
   const disconnectWallet = useCallback(() => {
+    cleanupListeners();
     setSelectedWalletInfo(null);
     setSelectedProvider(null);
     setAccount(null);
     setChainId(null);
     setErrorMessage(null);
     setStatus('DISCONNECTED');
-  }, []);
+  }, [cleanupListeners]);
 
   const switchToStudionet = useCallback(async (): Promise<boolean> => {
     const provider = selectedProvider || (typeof window !== 'undefined' && (window as any).ethereum);
@@ -154,9 +172,14 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     async (walletDetail: EIP6963ProviderDetail) => {
       setStatus('CONNECTING');
       setErrorMessage(null);
-      setSelectedWalletInfo(walletDetail);
+      cleanupListeners();
+
       const provider = walletDetail.provider;
-      setSelectedProvider(provider);
+      if (!provider || typeof provider.request !== 'function') {
+        setErrorMessage('Selected wallet provider is not responding.');
+        setStatus('ERROR');
+        return;
+      }
 
       try {
         const accounts: string[] = await provider.request({
@@ -164,7 +187,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         });
 
         if (!accounts || accounts.length === 0) {
-          throw new Error('No accounts selected');
+          throw new Error('No account authorized in wallet');
         }
 
         const rawChainId: string = await provider.request({
@@ -172,6 +195,9 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         });
         const parsedChainId = parseInt(rawChainId, 16);
 
+        // Atomic update of canonical wallet session state
+        setSelectedProvider(provider);
+        setSelectedWalletInfo(walletDetail);
         setAccount(accounts[0]);
         setChainId(parsedChainId);
 
@@ -185,22 +211,22 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             setChainId(STUDIONET_CHAIN_ID);
             setStatus('CONNECTED');
           } catch {
-            // Keep status as WRONG_CHAIN
+            // Keep status as WRONG_CHAIN so user can click switch
           }
         } else {
           setStatus('CONNECTED');
         }
 
-        // Account & chain change event listeners
-        provider.on?.('accountsChanged', (newAccounts: string[]) => {
+        // Setup clean event listeners for this active provider
+        const handleAccountsChanged = (newAccounts: string[]) => {
           if (!newAccounts || newAccounts.length === 0) {
             disconnectWallet();
           } else {
             setAccount(newAccounts[0]);
           }
-        });
+        };
 
-        provider.on?.('chainChanged', (newChainHex: string) => {
+        const handleChainChanged = (newChainHex: string) => {
           const newId = parseInt(newChainHex, 16);
           setChainId(newId);
           if (newId !== STUDIONET_CHAIN_ID) {
@@ -208,36 +234,41 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           } else {
             setStatus('CONNECTED');
           }
-        });
+        };
+
+        provider.on?.('accountsChanged', handleAccountsChanged);
+        provider.on?.('chainChanged', handleChainChanged);
+
+        activeListenersRef.current = {
+          provider,
+          accountsChanged: handleAccountsChanged,
+          chainChanged: handleChainChanged,
+        };
       } catch (err: any) {
         setErrorMessage(err.message || 'Failed to connect wallet');
         setStatus('ERROR');
       }
     },
-    [disconnectWallet]
+    [cleanupListeners, disconnectWallet]
   );
 
-  const requestAccountSwitch = useCallback(async () => {
-    const provider = selectedProvider || (typeof window !== 'undefined' && (window as any).ethereum);
-    if (!provider) return;
-
+  const requestAccountChangeInCurrentWallet = useCallback(async () => {
+    if (!selectedProvider) return;
     try {
-      // EIP-2255 or wallet_requestPermissions forces account picker prompt
-      await provider.request({
+      await selectedProvider.request({
         method: 'wallet_requestPermissions',
         params: [{ eth_accounts: {} }],
       });
-      const accounts: string[] = await provider.request({
+      const accounts: string[] = await selectedProvider.request({
         method: 'eth_accounts',
       });
       if (accounts && accounts.length > 0) {
         setAccount(accounts[0]);
       }
-    } catch {
-      // Fallback: open chooser to let user pick a different wallet extension
-      openChooser();
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Account change cancelled');
     }
-  }, [selectedProvider, openChooser]);
+  }, [selectedProvider]);
 
   return (
     <WalletContext.Provider
@@ -254,7 +285,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         connectWallet,
         disconnectWallet,
         switchToStudionet,
-        requestAccountSwitch,
+        requestAccountChangeInCurrentWallet,
       }}
     >
       {children}

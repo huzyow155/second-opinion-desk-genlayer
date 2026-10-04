@@ -26,8 +26,8 @@ The dApp connects users to GenLayer's GenVM execution runtime through browser-in
           v                                                   v
 +-------------------------------+           +-------------------------------+
 |  Wallet Context (EIP-6963)    |           | Public Client (genlayer-js)   |
-|  - MetaMask / Rabby / Fallback|           | - Zero-Wallet View Reads      |
-|  - Account Switcher (Perms)   |           | - list_cases / get_case       |
+|  - MetaMask / Rabby / Detected|           | - Zero-Wallet View Reads      |
+|  - Explicit Switch Wallet     |           | - list_cases / get_case       |
 |  - Chain Switcher (61999)     |           | - get_certificate             |
 +-------------------------------+           +-------------------------------+
           |                                                   |
@@ -47,7 +47,7 @@ The dApp connects users to GenLayer's GenVM execution runtime through browser-in
 |                                    v                                    |
 |  +-------------------------------------------------------------------+  |
 |  | MirrorJudgeConsumer Contract (0x6E295655a...CC8881)               |  |
-|  | - Downstream settlement payout & escrow execution                 |  |
+|  | - Downstream outcome reading & settlement policy execution        |  |
 |  +-------------------------------------------------------------------+  |
 +-------------------------------------------------------------------------+
 ```
@@ -57,7 +57,7 @@ The dApp connects users to GenLayer's GenVM execution runtime through browser-in
 ## 2. Core Architectural Guarantees
 
 ### A. Strict Page Separation (Zero Content Overlap)
-- **Landing Page (`/`)**: Dedicated marketing and explainer page. Focuses on the LLM position-bias vulnerability, the dual-pass solution, and why GenLayer is uniquely required for AI smart contracts. Holds zero wallet connections, zero live contract reads, and zero case data.
+- **Landing Page (`/`)**: Dedicated marketing and explainer page. Focuses on the LLM position-bias vulnerability, the dual-pass solution, and why GenLayer is uniquely required for AI smart contracts. Holds zero wallet connections, zero contract reads, and zero case data.
 - **Workbench (`/app`)**: Dedicated functional application. Hosts the no-wallet on-chain demo browser, case creation form, evidence submission panel, consensus judging trigger with multi-step waiting modal, and stability certificate viewer.
 
 ### B. Ground Rule Compliance: No Client-Side ID Hashing
@@ -66,13 +66,13 @@ The dApp connects users to GenLayer's GenVM execution runtime through browser-in
 - Global cases and user cases are discovered using `list_cases(offset, limit)` and `get_cases_by_party(party, limit)`.
 
 ### C. Multi-Wallet & Cross-Extension Support (EIP-6963)
-- Listens for `eip6963:announceProvider` events to detect all browser-injected wallet extensions (e.g. MetaMask, Rabby, Coinbase Wallet) simultaneously.
-- Provides an explicit "Switch Wallet" interface using `wallet_requestPermissions` and provider selection, allowing a single tester to easily switch between Party 1 and Party 2 accounts.
+- Listens for `eip6963:announceProvider` events to detect all browser-injected wallet extensions (e.g. MetaMask, Rabby, OKX) simultaneously.
+- Provides an explicit "Switch Wallet" interface that always opens the provider chooser directly, allowing a single tester to easily switch between Party 1 and Party 2 extensions without assuming `accountsChanged` fires across extensions.
 - Zero private keys or mnemonics are ever stored or handled.
 
 ### D. Zero-Gas Network Handling
 - Studionet transactions use `gasPrice: 0`.
-- Contract methods do not require funds; any 0-GEN address can open cases, submit evidence, and trigger adjudication.
+- MirrorJudge does not require a payment value for case creation, evidence, or adjudication.
 - Clear user guidance is surfaced persistently in the top banner.
 
 ---
@@ -98,4 +98,4 @@ When `judge(case_id)` is invoked, GenLayer validators execute two non-determinis
 4. **Validator Consensus**
    - Validators run this pipeline and achieve majority agreement on the resulting stability certificate.
    - Total latency typically ranges between **19 seconds and 55 seconds** (up to ~138 seconds during high network load).
-   - The UI displays an active multi-step waiting state modal with an elapsed-time ticker during this interval.
+   - The UI displays an active multi-step waiting state modal with a real-time elapsed timer during this interval.
