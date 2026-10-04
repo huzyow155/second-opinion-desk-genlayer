@@ -33,19 +33,22 @@ export const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8faf9] text-stone-800 font-sans selection:bg-emerald-100 selection:text-emerald-900">
-      <Navbar currentTab={currentTab} setCurrentTab={handleSetTab} />
-      <WalletModal />
+    <div className="min-h-screen flex flex-col text-[#eef0f2] font-sans selection:bg-white/20 selection:text-white relative">
+      <div className="app-atmosphere" aria-hidden="true" />
+      <div className="relative z-10 flex flex-col flex-1">
+        <Navbar currentTab={currentTab} setCurrentTab={handleSetTab} />
+        <WalletModal />
 
-      <main className="flex-1">
-        {currentTab === 'landing' ? (
-          <LandingPage onLaunchApp={() => handleSetTab('app')} />
-        ) : (
-          <AppWorkbench />
-        )}
-      </main>
+        <main className="flex-1">
+          {currentTab === 'landing' ? (
+            <LandingPage onLaunchApp={() => handleSetTab('app')} />
+          ) : (
+            <AppWorkbench />
+          )}
+        </main>
 
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, CheckCircle2, Clock, ShieldCheck, Sparkles, Scale, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, Clock, ShieldCheck, Sparkles, Scale } from 'lucide-react';
 
 interface WaitingStateModalProps {
   isOpen: boolean;
@@ -49,59 +49,58 @@ export const WaitingStateModal: React.FC<WaitingStateModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-stone-200/90 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg silver-frame-raised p-6 sm:p-8 overflow-hidden">
         {/* Top Header */}
-        <div className="text-center pb-5 border-b border-stone-100">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 mb-3 shadow-inner">
-            <Loader2 className="w-7 h-7 animate-spin" />
+        <div className="text-center pb-5 border-b border-white/[0.08]">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/[0.06] border border-white/[0.12] text-white mb-3 shadow-inner">
+            <Loader2 className="w-6 h-6 animate-spin text-stone-200" />
           </div>
-          <h3 className="text-xl font-bold text-stone-900">{title}</h3>
-          <p className="text-xs text-stone-700 mt-1 max-w-sm mx-auto">
+          <h3 className="text-lg font-bold text-[#eef0f2]">{title}</h3>
+          <p className="text-xs text-[#9fa5b0] mt-1 max-w-sm mx-auto">
             Dual-pass intelligent execution on GenLayer Studionet Preview
           </p>
         </div>
 
         {/* Elapsed Timer Counter */}
-        <div className="mt-5 p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80 flex items-center justify-between">
+        <div className="mt-4 p-3 rounded-xl silver-frame-inset flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-emerald-600" />
-            <span className="text-xs font-semibold text-stone-700">Consensus In Progress</span>
+            <Clock className="w-3.5 h-3.5 text-stone-300" />
+            <span className="text-xs font-medium text-[#eef0f2]">Consensus In Progress</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-stone-600">Elapsed:</span>
-            <span className="font-mono text-sm font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200/60">
+            <span className="text-xs text-[#9fa5b0]">Elapsed:</span>
+            <span className="font-mono text-xs font-bold text-white bg-white/[0.10] px-2 py-0.5 rounded-md border border-white/[0.16] shadow-xs">
               {elapsedSeconds}s
             </span>
-            <span className="text-[11px] text-stone-600">(typical: 19s - 55s)</span>
+            <span className="text-[11px] text-[#6c727d]">(typical: 19s - 55s)</span>
           </div>
         </div>
 
         {/* 4-Stage Visual Timeline */}
-        <div className="mt-5 space-y-3">
+        <div className="mt-4 space-y-2.5">
           {stages.map((stg, idx) => {
             const isDone = idx < activeStageIndex;
             const isCurrent = idx === activeStageIndex;
-            const isPending = idx > activeStageIndex;
 
             return (
               <div
                 key={idx}
-                className={`p-3 rounded-2xl border transition-all flex items-start gap-3 ${
+                className={`p-3 rounded-xl border transition-all flex items-start gap-3 ${
                   isCurrent
-                    ? 'bg-emerald-50/60 border-emerald-300 ring-1 ring-emerald-200/80'
+                    ? 'bg-white/[0.08] border-white/[0.22] shadow-[0_0_15px_rgba(255,255,255,0.05)]'
                     : isDone
-                    ? 'bg-stone-50/70 border-stone-200 opacity-90'
-                    : 'bg-white border-stone-100 opacity-50'
+                    ? 'bg-white/[0.03] border-white/[0.08] opacity-80'
+                    : 'bg-black/20 border-white/[0.04] opacity-40'
                 }`}
               >
                 <div className="mt-0.5 shrink-0">
                   {isDone ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   ) : isCurrent ? (
-                    <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
+                    <Loader2 className="w-4 h-4 text-white animate-spin" />
                   ) : (
-                    <div className="w-4 h-4 rounded-full border border-stone-300 flex items-center justify-center text-[10px] text-stone-600">
+                    <div className="w-4 h-4 rounded-full border border-white/[0.20] flex items-center justify-center text-[10px] text-[#9fa5b0]">
                       {idx + 1}
                     </div>
                   )}
@@ -109,16 +108,12 @@ export const WaitingStateModal: React.FC<WaitingStateModalProps> = ({
                 <div>
                   <div
                     className={`text-xs font-semibold ${
-                      isCurrent
-                        ? 'text-emerald-950 font-bold'
-                        : isDone
-                        ? 'text-stone-800'
-                        : 'text-stone-600'
+                      isCurrent ? 'text-white' : isDone ? 'text-[#eef0f2]' : 'text-[#6c727d]'
                     }`}
                   >
                     {stg.label}
                   </div>
-                  <div className="text-[11px] text-stone-600 mt-0.5 leading-snug">
+                  <div className="text-[11px] text-[#9fa5b0] mt-0.5 leading-snug">
                     {stg.desc}
                   </div>
                 </div>
@@ -128,14 +123,14 @@ export const WaitingStateModal: React.FC<WaitingStateModalProps> = ({
         </div>
 
         {/* Current activity note */}
-        <div className="mt-5 text-center text-xs text-stone-700 bg-stone-50/70 p-2.5 rounded-xl border border-stone-100">
-          <span className="font-semibold text-stone-800">Status: </span>
+        <div className="mt-4 text-center text-xs text-[#9fa5b0] silver-frame-inset p-2.5">
+          <span className="font-semibold text-[#eef0f2]">Status: </span>
           <span>{stageName || 'Awaiting validator majority agreement...'}</span>
         </div>
 
         {txHash && (
           <div className="mt-3 text-center">
-            <span className="text-[11px] font-mono text-stone-600">
+            <span className="text-[11px] font-mono text-[#6c727d]">
               Tx: {txHash.substring(0, 10)}...{txHash.substring(txHash.length - 8)}
             </span>
           </div>

@@ -17,35 +17,25 @@ import {
   getWriteClient,
 } from '../../services/contractService';
 import {
-  MIRROR_JUDGE_ADDRESS,
   CONSUMER_CONTRACT_ADDRESS,
-  STUDIONET_EXPLORER_URL,
   VERIFIED_DEMO_CASES,
 } from '../../config/chain';
 import type { CaseRecord, StabilityCertificate, Criterion } from '../../types/dispute';
 import { WaitingStateModal } from '../common/WaitingStateModal';
 import {
   Scale,
-  Shield,
   Clock,
   Sparkles,
-  Search,
   PlusCircle,
-  FileText,
   Gavel,
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
-  ArrowRight,
-  ExternalLink,
   RefreshCw,
-  Layers,
-  Send,
   Building,
   ArrowRightLeft,
   ChevronRight,
   Info,
-  Check,
 } from 'lucide-react';
 
 export const AppWorkbench: React.FC = () => {
@@ -466,8 +456,8 @@ export const AppWorkbench: React.FC = () => {
   const renderStabilityBadge = (decision: string) => {
     if (!decision) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-stone-100 text-stone-700 border border-stone-200">
-          <Clock className="w-3 h-3 text-stone-500" />
+        <span className="silver-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium">
+          <Clock className="w-3 h-3 text-[#6c727d]" />
           <span>Awaiting Adjudication</span>
         </span>
       );
@@ -475,39 +465,39 @@ export const AppWorkbench: React.FC = () => {
 
     if (decision.includes('STABLE')) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-xs">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+        <span className="status-badge-stable inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
           <span>STABLE</span>
         </span>
       );
     }
     if (decision.includes('UNSTABLE')) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300">
-          <AlertTriangle className="w-3.5 h-3.5 text-rose-700" />
+        <span className="status-badge-unstable inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold">
+          <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
           <span>UNSTABLE (Position Bias Detected)</span>
         </span>
       );
     }
     if (decision.includes('INSUFFICIENT')) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-900 border border-blue-300">
-          <Info className="w-3.5 h-3.5 text-blue-700" />
+        <span className="status-badge-insufficient inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold">
+          <Info className="w-3.5 h-3.5 text-blue-400" />
           <span>INSUFFICIENT EVIDENCE</span>
         </span>
       );
     }
     if (decision.includes('SPLIT')) {
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
-          <Scale className="w-3.5 h-3.5 text-amber-700" />
+        <span className="status-badge-split inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold">
+          <Scale className="w-3.5 h-3.5 text-amber-400" />
           <span>SPLIT (Equally Balanced)</span>
         </span>
       );
     }
 
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-stone-100 text-stone-800">
+      <span className="silver-pill inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium">
         {decision}
       </span>
     );
@@ -526,19 +516,19 @@ export const AppWorkbench: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Zero-Gas Notice & Wallet Info Banner */}
-        <section className="soft-surface p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-emerald-200/60 bg-gradient-to-r from-emerald-50/40 via-white to-stone-50">
+        <section className="silver-frame p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-emerald-600/10 border border-emerald-600/20 flex items-center justify-center text-emerald-700 shrink-0">
-              <Sparkles className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center text-[#eef0f2] shrink-0">
+              <Sparkles className="w-4 h-4 text-stone-300" />
             </div>
             <div>
-              <div className="text-xs font-bold text-stone-900 flex items-center gap-2">
+              <div className="text-xs font-bold text-[#eef0f2] flex items-center gap-2">
                 <span>Studionet Zero Gas Price Network</span>
-                <span className="px-2 py-0.2 bg-emerald-100 text-emerald-800 rounded-md text-[10px] font-mono">
+                <span className="silver-pill text-[10px] px-2 py-0.2 rounded font-mono text-stone-300">
                   Chain ID 61999
                 </span>
               </div>
-              <p className="text-xs text-stone-600 mt-0.5">
+              <p className="text-xs text-[#9fa5b0] mt-0.5">
                 Studionet transactions use zero gas price. A 0-GEN wallet can open cases, submit evidence, and trigger judging without funding.
               </p>
             </div>
@@ -547,22 +537,22 @@ export const AppWorkbench: React.FC = () => {
           <div className="flex items-center gap-2 shrink-0">
             {isConnected ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-stone-600 font-mono bg-stone-100 px-2.5 py-1 rounded-xl">
+                <span className="text-xs text-[#9fa5b0] font-mono bg-[#121417] border border-white/[0.08] px-2.5 py-1 rounded-lg">
                   {account?.substring(0, 6)}...{account?.substring(account.length - 4)}
                 </span>
                 <button
                   onClick={requestAccountSwitch}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-xl btn-secondary-soft cursor-pointer"
+                  className="flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-lg btn-silver-glass cursor-pointer"
                   title="Switch wallet account"
                 >
-                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                  <ArrowRightLeft className="w-3 h-3 text-[#9fa5b0]" />
                   <span>Switch Wallet</span>
                 </button>
               </div>
             ) : (
               <button
                 onClick={openChooser}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl btn-primary-green cursor-pointer shadow-xs"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl btn-silver-primary cursor-pointer shadow-xs"
               >
                 <span>Connect Wallet to Write</span>
               </button>
@@ -572,14 +562,14 @@ export const AppWorkbench: React.FC = () => {
 
         {/* Action feedback banners */}
         {actionSuccessMsg && (
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3 text-xs text-emerald-900">
+          <div className="p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs text-emerald-300">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>{actionSuccessMsg}</span>
             </div>
             <button
               onClick={() => setActionSuccessMsg(null)}
-              className="text-emerald-700 hover:text-emerald-900 text-xs font-bold"
+              className="text-emerald-400 hover:text-white text-xs font-bold cursor-pointer"
             >
               Dismiss
             </button>
@@ -587,14 +577,14 @@ export const AppWorkbench: React.FC = () => {
         )}
 
         {actionError && (
-          <div className="p-4 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-between gap-3 text-xs text-red-900">
+          <div className="p-3.5 rounded-xl bg-rose-950/30 border border-rose-500/30 flex items-center justify-between gap-3 text-xs text-rose-300">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{actionError}</span>
             </div>
             <button
               onClick={() => setActionError(null)}
-              className="text-red-700 hover:text-red-900 text-xs font-bold"
+              className="text-rose-400 hover:text-white text-xs font-bold cursor-pointer"
             >
               Dismiss
             </button>
@@ -606,53 +596,53 @@ export const AppWorkbench: React.FC = () => {
           {/* Left Column: Navigation Tabs & Operation Forms (5 cols) */}
           <div className="lg:col-span-5 space-y-6">
             {/* Workbench Navigation Tab Bar */}
-            <div className="p-1.5 bg-stone-200/60 rounded-2xl flex flex-wrap gap-1 border border-stone-300/50">
+            <div className="p-1 bg-[#121417]/90 rounded-xl flex flex-wrap gap-1 border border-white/[0.08]">
               <button
                 onClick={() => setActiveTab('demo')}
-                className={`flex-1 min-w-[70px] py-2 px-3 text-xs font-semibold rounded-xl transition cursor-pointer text-center ${
+                className={`flex-1 min-w-[70px] py-1.5 px-3 text-xs font-medium rounded-lg transition cursor-pointer text-center ${
                   activeTab === 'demo'
-                    ? 'bg-white text-stone-900 shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
+                    ? 'bg-white/[0.12] text-white border border-white/[0.16] shadow-xs'
+                    : 'text-[#9fa5b0] hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
                 Demo Cases
               </button>
               <button
                 onClick={() => setActiveTab('open')}
-                className={`flex-1 min-w-[70px] py-2 px-3 text-xs font-semibold rounded-xl transition cursor-pointer text-center ${
+                className={`flex-1 min-w-[70px] py-1.5 px-3 text-xs font-medium rounded-lg transition cursor-pointer text-center ${
                   activeTab === 'open'
-                    ? 'bg-white text-stone-900 shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
+                    ? 'bg-white/[0.12] text-white border border-white/[0.16] shadow-xs'
+                    : 'text-[#9fa5b0] hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
                 Open Case
               </button>
               <button
                 onClick={() => setActiveTab('evidence')}
-                className={`flex-1 min-w-[70px] py-2 px-3 text-xs font-semibold rounded-xl transition cursor-pointer text-center ${
+                className={`flex-1 min-w-[70px] py-1.5 px-3 text-xs font-medium rounded-lg transition cursor-pointer text-center ${
                   activeTab === 'evidence'
-                    ? 'bg-white text-stone-900 shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
+                    ? 'bg-white/[0.12] text-white border border-white/[0.16] shadow-xs'
+                    : 'text-[#9fa5b0] hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
                 Add Evidence
               </button>
               <button
                 onClick={() => setActiveTab('judge')}
-                className={`flex-1 min-w-[70px] py-2 px-3 text-xs font-semibold rounded-xl transition cursor-pointer text-center ${
+                className={`flex-1 min-w-[70px] py-1.5 px-3 text-xs font-medium rounded-lg transition cursor-pointer text-center ${
                   activeTab === 'judge'
-                    ? 'bg-white text-stone-900 shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
+                    ? 'bg-white/[0.12] text-white border border-white/[0.16] shadow-xs'
+                    : 'text-[#9fa5b0] hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
                 Judge
               </button>
               <button
                 onClick={() => setActiveTab('inspect')}
-                className={`flex-1 min-w-[70px] py-2 px-3 text-xs font-semibold rounded-xl transition cursor-pointer text-center ${
+                className={`flex-1 min-w-[70px] py-1.5 px-3 text-xs font-medium rounded-lg transition cursor-pointer text-center ${
                   activeTab === 'inspect'
-                    ? 'bg-white text-stone-900 shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900'
+                    ? 'bg-white/[0.12] text-white border border-white/[0.16] shadow-xs'
+                    : 'text-[#9fa5b0] hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
                 Lookup
@@ -661,15 +651,15 @@ export const AppWorkbench: React.FC = () => {
 
             {/* TAB 1: DEMO CASES (No-Wallet View) */}
             {activeTab === 'demo' && (
-              <div className="soft-surface p-6 space-y-4">
+              <div className="silver-frame p-6 space-y-4">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-stone-900 text-base">Persistent On-Chain Demos</h3>
-                    <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-lg">
+                    <h3 className="font-bold text-[#eef0f2] text-base">Persistent On-Chain Demos</h3>
+                    <span className="silver-pill text-[11px] font-semibold px-2 py-0.5 rounded-lg text-stone-300">
                       No Wallet Needed
                     </span>
                   </div>
-                  <p className="text-xs text-stone-600">
+                  <p className="text-xs text-[#9fa5b0]">
                     Real, immutable cases already adjudicated by MirrorJudge validators on Studionet.
                   </p>
                 </div>
@@ -678,93 +668,93 @@ export const AppWorkbench: React.FC = () => {
                   {/* Demo A */}
                   <button
                     onClick={() => loadCaseData(VERIFIED_DEMO_CASES.DEMO_A.id)}
-                    className={`w-full p-4 rounded-2xl border text-left transition cursor-pointer ${
+                    className={`w-full p-4 rounded-xl border text-left transition cursor-pointer ${
                       inspectedCaseId === VERIFIED_DEMO_CASES.DEMO_A.id
-                        ? 'bg-emerald-50/70 border-emerald-400 ring-1 ring-emerald-300'
-                        : 'bg-white border-stone-200/80 hover:bg-stone-50'
+                        ? 'bg-white/[0.08] border-white/[0.25] shadow-[0_0_15px_rgba(255,255,255,0.05)]'
+                        : 'bg-[#121417]/80 border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-stone-300 uppercase tracking-wide">
                         Demo A • {VERIFIED_DEMO_CASES.DEMO_A.category}
                       </span>
-                      <span className="text-[11px] font-mono text-stone-500">
+                      <span className="text-[11px] font-mono text-[#6c727d]">
                         ID: {VERIFIED_DEMO_CASES.DEMO_A.id}
                       </span>
                     </div>
-                    <div className="font-bold text-sm text-stone-900">
+                    <div className="font-bold text-sm text-[#eef0f2]">
                       {VERIFIED_DEMO_CASES.DEMO_A.title}
                     </div>
-                    <p className="text-xs text-stone-600 mt-1 leading-relaxed">
+                    <p className="text-xs text-[#9fa5b0] mt-1 leading-relaxed">
                       {VERIFIED_DEMO_CASES.DEMO_A.description}
                     </p>
                     <div className="mt-3 flex items-center justify-between text-xs">
-                      <span className="font-mono text-emerald-700 font-semibold">
+                      <span className="font-mono text-emerald-400 font-medium">
                         Verdict: {VERIFIED_DEMO_CASES.DEMO_A.expectedDecision}
                       </span>
-                      <ChevronRight className="w-4 h-4 text-stone-400" />
+                      <ChevronRight className="w-4 h-4 text-[#6c727d]" />
                     </div>
                   </button>
 
                   {/* Demo B */}
                   <button
                     onClick={() => loadCaseData(VERIFIED_DEMO_CASES.DEMO_B.id)}
-                    className={`w-full p-4 rounded-2xl border text-left transition cursor-pointer ${
+                    className={`w-full p-4 rounded-xl border text-left transition cursor-pointer ${
                       inspectedCaseId === VERIFIED_DEMO_CASES.DEMO_B.id
-                        ? 'bg-emerald-50/70 border-emerald-400 ring-1 ring-emerald-300'
-                        : 'bg-white border-stone-200/80 hover:bg-stone-50'
+                        ? 'bg-white/[0.08] border-white/[0.25] shadow-[0_0_15px_rgba(255,255,255,0.05)]'
+                        : 'bg-[#121417]/80 border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-amber-800 uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-stone-300 uppercase tracking-wide">
                         Demo B • {VERIFIED_DEMO_CASES.DEMO_B.category}
                       </span>
-                      <span className="text-[11px] font-mono text-stone-500">
+                      <span className="text-[11px] font-mono text-[#6c727d]">
                         ID: {VERIFIED_DEMO_CASES.DEMO_B.id}
                       </span>
                     </div>
-                    <div className="font-bold text-sm text-stone-900">
+                    <div className="font-bold text-sm text-[#eef0f2]">
                       {VERIFIED_DEMO_CASES.DEMO_B.title}
                     </div>
-                    <p className="text-xs text-stone-600 mt-1 leading-relaxed">
+                    <p className="text-xs text-[#9fa5b0] mt-1 leading-relaxed">
                       {VERIFIED_DEMO_CASES.DEMO_B.description}
                     </p>
                     <div className="mt-3 flex items-center justify-between text-xs">
-                      <span className="font-mono text-amber-700 font-semibold">
+                      <span className="font-mono text-amber-400 font-medium">
                         Verdict: {VERIFIED_DEMO_CASES.DEMO_B.expectedDecision}
                       </span>
-                      <ChevronRight className="w-4 h-4 text-stone-400" />
+                      <ChevronRight className="w-4 h-4 text-[#6c727d]" />
                     </div>
                   </button>
 
                   {/* Demo Escalated */}
                   <button
                     onClick={() => loadCaseData(VERIFIED_DEMO_CASES.DEMO_ESCALATED.id)}
-                    className={`w-full p-4 rounded-2xl border text-left transition cursor-pointer ${
+                    className={`w-full p-4 rounded-xl border text-left transition cursor-pointer ${
                       inspectedCaseId === VERIFIED_DEMO_CASES.DEMO_ESCALATED.id
-                        ? 'bg-emerald-50/70 border-emerald-400 ring-1 ring-emerald-300'
-                        : 'bg-white border-stone-200/80 hover:bg-stone-50'
+                        ? 'bg-white/[0.08] border-white/[0.25] shadow-[0_0_15px_rgba(255,255,255,0.05)]'
+                        : 'bg-[#121417]/80 border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-blue-800 uppercase tracking-wide">
+                      <span className="text-[11px] font-bold text-stone-300 uppercase tracking-wide">
                         Demo C • Multi-Round Escalation
                       </span>
-                      <span className="text-[11px] font-mono text-stone-500">
+                      <span className="text-[11px] font-mono text-[#6c727d]">
                         ID: {VERIFIED_DEMO_CASES.DEMO_ESCALATED.id}
                       </span>
                     </div>
-                    <div className="font-bold text-sm text-stone-900">
+                    <div className="font-bold text-sm text-[#eef0f2]">
                       {VERIFIED_DEMO_CASES.DEMO_ESCALATED.title}
                     </div>
-                    <p className="text-xs text-stone-600 mt-1 leading-relaxed">
+                    <p className="text-xs text-[#9fa5b0] mt-1 leading-relaxed">
                       {VERIFIED_DEMO_CASES.DEMO_ESCALATED.description}
                     </p>
                     <div className="mt-3 flex items-center justify-between text-xs">
-                      <span className="font-mono text-blue-700 font-semibold">
+                      <span className="font-mono text-blue-400 font-medium">
                         R1: INSUFFICIENT &rarr; R2: STABLE
                       </span>
-                      <ChevronRight className="w-4 h-4 text-stone-400" />
+                      <ChevronRight className="w-4 h-4 text-[#6c727d]" />
                     </div>
                   </button>
                 </div>
@@ -773,31 +763,31 @@ export const AppWorkbench: React.FC = () => {
 
             {/* TAB 2: OPEN CASE FORM */}
             {activeTab === 'open' && (
-              <form onSubmit={handleOpenCase} className="soft-surface p-6 space-y-4">
+              <form onSubmit={handleOpenCase} className="silver-frame p-6 space-y-4">
                 <div className="space-y-1">
-                  <h3 className="font-bold text-stone-900 text-base">Open Mirrored Dispute</h3>
-                  <p className="text-xs text-stone-600">
+                  <h3 className="font-bold text-[#eef0f2] text-base">Open Mirrored Dispute</h3>
+                  <p className="text-xs text-[#9fa5b0]">
                     Creates an immutable case specification with weighted criteria and anonymized aliases.
                   </p>
                 </div>
 
                 {openError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                  <div className="p-3 bg-rose-950/30 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
                     <span>{openError}</span>
                   </div>
                 )}
 
                 {openSuccessMsg && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                  <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
                     <span>{openSuccessMsg}</span>
                   </div>
                 )}
 
                 <div className="space-y-3 pt-1">
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-semibold text-[#9fa5b0] mb-1">
                       Dispute Title
                     </label>
                     <input
@@ -805,13 +795,13 @@ export const AppWorkbench: React.FC = () => {
                       value={openTitle}
                       onChange={(e) => setOpenTitle(e.target.value)}
                       placeholder="e.g. Frontend Redesign Milestone 2 Deliverable"
-                      className="w-full text-xs p-2.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:border-emerald-500 focus:outline-none transition"
+                      className="silver-input w-full text-xs p-2.5 rounded-xl"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-semibold text-[#9fa5b0] mb-1">
                       Opposing Party Address (Party 2)
                     </label>
                     <input
@@ -819,54 +809,54 @@ export const AppWorkbench: React.FC = () => {
                       value={opposingAddress}
                       onChange={(e) => setOpposingAddress(e.target.value)}
                       placeholder="0x..."
-                      className="w-full text-xs font-mono p-2.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:border-emerald-500 focus:outline-none transition"
+                      className="silver-input w-full text-xs font-mono p-2.5 rounded-xl"
                       required
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-stone-700 mb-1">
+                      <label className="block text-xs font-semibold text-[#9fa5b0] mb-1">
                         Party 1 Aliases
                       </label>
                       <input
                         type="text"
                         value={aliases1}
                         onChange={(e) => setAliases1(e.target.value)}
-                        className="w-full text-xs p-2 rounded-xl border border-stone-200 bg-stone-50/50"
+                        className="silver-input w-full text-xs p-2 rounded-xl"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-stone-700 mb-1">
+                      <label className="block text-xs font-semibold text-[#9fa5b0] mb-1">
                         Party 2 Aliases
                       </label>
                       <input
                         type="text"
                         value={aliases2}
                         onChange={(e) => setAliases2(e.target.value)}
-                        className="w-full text-xs p-2 rounded-xl border border-stone-200 bg-stone-50/50"
+                        className="silver-input w-full text-xs p-2 rounded-xl"
                       />
                     </div>
                   </div>
 
                   {/* Criteria Builder */}
-                  <div className="space-y-2 pt-2 border-t border-stone-100">
+                  <div className="space-y-2 pt-2 border-t border-white/[0.08]">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-stone-800">
+                      <span className="text-xs font-semibold text-[#eef0f2]">
                         Weighted Criteria ({criteria.length}/4)
                       </span>
                       <button
                         type="button"
                         onClick={handleEqualizeWeights}
-                        className="text-[11px] text-emerald-700 hover:text-emerald-800 font-semibold cursor-pointer underline"
+                        className="text-[11px] text-stone-300 hover:text-white font-medium cursor-pointer underline"
                       >
                         Equalize Weights
                       </button>
                     </div>
 
                     {criteria.map((c, idx) => (
-                      <div key={idx} className="p-2.5 rounded-xl bg-stone-50 border border-stone-200/80 space-y-2">
-                        <div className="flex items-center justify-between text-xs font-medium text-stone-600">
+                      <div key={idx} className="p-2.5 rounded-xl silver-frame-inset space-y-2">
+                        <div className="flex items-center justify-between text-xs font-medium text-[#9fa5b0]">
                           <span>Criterion #{idx + 1}</span>
                           <div className="flex items-center gap-1.5">
                             <input
@@ -880,9 +870,9 @@ export const AppWorkbench: React.FC = () => {
                                   )
                                 );
                               }}
-                              className="w-20 text-xs font-mono p-1 rounded-lg border border-stone-200 text-right bg-white"
+                              className="w-20 text-xs font-mono p-1 rounded-lg border border-white/[0.10] text-right bg-[#0c0d0f] text-[#eef0f2]"
                             />
-                            <span className="text-[11px] text-stone-500">bp ({(c.weight_bp / 100).toFixed(1)}%)</span>
+                            <span className="text-[11px] text-[#6c727d]">bp ({(c.weight_bp / 100).toFixed(1)}%)</span>
                           </div>
                         </div>
                         <input
@@ -897,7 +887,7 @@ export const AppWorkbench: React.FC = () => {
                             );
                           }}
                           placeholder="Criterion description"
-                          className="w-full text-xs p-1.5 rounded-lg border border-stone-200 bg-white"
+                          className="w-full text-xs p-1.5 rounded-lg border border-white/[0.08] bg-[#0c0d0f] text-[#eef0f2]"
                         />
                       </div>
                     ))}
@@ -912,7 +902,7 @@ export const AppWorkbench: React.FC = () => {
                             { id: `crit_${criteria.length + 1}`, text: '', weight_bp: 0 },
                           ])
                         }
-                        className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 disabled:opacity-40 flex items-center gap-1"
+                        className="text-xs font-medium text-stone-300 hover:text-white disabled:opacity-40 flex items-center gap-1 cursor-pointer"
                       >
                         <PlusCircle className="w-3.5 h-3.5" />
                         <span>Add Criterion</span>
@@ -920,7 +910,7 @@ export const AppWorkbench: React.FC = () => {
 
                       <div
                         className={`font-mono font-bold ${
-                          totalCriteriaWeight === 10000 ? 'text-emerald-700' : 'text-red-600'
+                          totalCriteriaWeight === 10000 ? 'text-emerald-400' : 'text-rose-400'
                         }`}
                       >
                         Total: {totalCriteriaWeight}/10,000 bp
@@ -932,7 +922,7 @@ export const AppWorkbench: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!isConnected || totalCriteriaWeight !== 10000}
-                  className="w-full py-3 px-4 rounded-xl text-xs font-bold btn-primary-green cursor-pointer disabled:opacity-50 shadow-xs mt-2"
+                  className="w-full py-2.5 px-4 rounded-xl text-xs font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-xs mt-2"
                 >
                   {!isConnected ? 'Connect Wallet to Open Case' : 'Open Dispute on Studionet'}
                 </button>
@@ -941,31 +931,31 @@ export const AppWorkbench: React.FC = () => {
 
             {/* TAB 3: ADD EVIDENCE FORM */}
             {activeTab === 'evidence' && (
-              <form onSubmit={handleAddEvidence} className="soft-surface p-6 space-y-4">
+              <form onSubmit={handleAddEvidence} className="silver-frame p-6 space-y-4">
                 <div className="space-y-1">
-                  <h3 className="font-bold text-stone-900 text-base">Submit Case Evidence</h3>
-                  <p className="text-xs text-stone-600">
+                  <h3 className="font-bold text-[#eef0f2] text-base">Submit Case Evidence</h3>
+                  <p className="text-xs text-[#9fa5b0]">
                     Each party may submit up to 3 evidence items (&le; 1200 chars each) to the record.
                   </p>
                 </div>
 
                 {evidenceError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+                  <div className="p-3 bg-rose-950/30 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
                     <span>{evidenceError}</span>
                   </div>
                 )}
 
                 {evidenceSuccessMsg && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                  <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
                     <span>{evidenceSuccessMsg}</span>
                   </div>
                 )}
 
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    <label className="block text-xs font-semibold text-[#9fa5b0] mb-1">
                       Target Case ID
                     </label>
                     <input
@@ -973,19 +963,19 @@ export const AppWorkbench: React.FC = () => {
                       value={evidenceCaseId}
                       onChange={(e) => setEvidenceCaseId(e.target.value)}
                       placeholder="12-character Case ID (e.g. ebe94dc89329)"
-                      className="w-full text-xs font-mono p-2.5 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white"
+                      className="silver-input w-full text-xs font-mono p-2.5 rounded-xl"
                       required
                     />
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-semibold text-stone-700">
+                      <label className="block text-xs font-semibold text-[#9fa5b0]">
                         Evidence Text & Verifiable Facts
                       </label>
                       <span
                         className={`text-[11px] font-mono ${
-                          evidenceText.length > 1200 ? 'text-red-600 font-bold' : 'text-stone-500'
+                          evidenceText.length > 1200 ? 'text-rose-400 font-bold' : 'text-[#6c727d]'
                         }`}
                       >
                         {evidenceText.length}/1200 chars
@@ -996,7 +986,7 @@ export const AppWorkbench: React.FC = () => {
                       value={evidenceText}
                       onChange={(e) => setEvidenceText(e.target.value)}
                       placeholder="Provide factual statements, commit references, deployment logs, or communication excerpts..."
-                      className="w-full text-xs p-3 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:border-emerald-500 focus:outline-none transition leading-relaxed"
+                      className="silver-input w-full text-xs p-3 rounded-xl leading-relaxed"
                       required
                     />
                   </div>
@@ -1005,7 +995,7 @@ export const AppWorkbench: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!isConnected || evidenceText.length === 0 || evidenceText.length > 1200}
-                  className="w-full py-3 px-4 rounded-xl text-xs font-bold btn-primary-green cursor-pointer disabled:opacity-50 shadow-xs"
+                  className="w-full py-2.5 px-4 rounded-xl text-xs font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-xs"
                 >
                   {!isConnected ? 'Connect Wallet to Submit' : 'Submit Evidence Entry'}
                 </button>
@@ -1014,42 +1004,42 @@ export const AppWorkbench: React.FC = () => {
 
             {/* TAB 4: JUDGE ACTION */}
             {activeTab === 'judge' && (
-              <div className="soft-surface p-6 space-y-4">
+              <div className="silver-frame p-6 space-y-4">
                 <div className="space-y-1">
-                  <h3 className="font-bold text-stone-900 text-base">Consensus Adjudication</h3>
-                  <p className="text-xs text-stone-600">
+                  <h3 className="font-bold text-[#eef0f2] text-base">Consensus Adjudication</h3>
+                  <p className="text-xs text-[#9fa5b0]">
                     Triggers the dual-pass validation routine across GenLayer validator committee.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-3">
+                <div className="p-4 rounded-xl silver-frame-inset space-y-3">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-stone-600">Selected Case:</span>
-                    <span className="font-mono font-bold text-stone-900">{inspectedCaseId || 'None'}</span>
+                    <span className="text-[#9fa5b0]">Selected Case:</span>
+                    <span className="font-mono font-bold text-[#eef0f2]">{inspectedCaseId || 'None'}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-stone-600">Total Evidence Entries:</span>
-                    <span className="font-mono text-stone-800">{caseRecord?.evidence?.length || 0}</span>
+                    <span className="text-[#9fa5b0]">Total Evidence Entries:</span>
+                    <span className="font-mono text-[#eef0f2]">{caseRecord?.evidence?.length || 0}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-stone-600">Completed Rounds:</span>
-                    <span className="font-mono text-stone-800">{caseRecord?.rounds?.length || 0}</span>
+                    <span className="text-[#9fa5b0]">Completed Rounds:</span>
+                    <span className="font-mono text-[#eef0f2]">{caseRecord?.rounds?.length || 0}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-stone-600">Current Status:</span>
-                    <span className="font-bold text-stone-900">{caseRecord?.status || 'UNKNOWN'}</span>
+                    <span className="text-[#9fa5b0]">Current Status:</span>
+                    <span className="font-bold text-[#eef0f2]">{caseRecord?.status || 'UNKNOWN'}</span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 text-[11px] text-amber-900 leading-relaxed">
-                  <span className="font-bold">Latency Expectation: </span>
+                <div className="p-3 rounded-xl silver-frame-inset text-[11px] text-[#9fa5b0] leading-relaxed">
+                  <span className="font-bold text-[#eef0f2]">Latency Expectation: </span>
                   Consensus adjudication runs two full LLM passes across GenLayer validators. Expect ~19s to 55s of validator consensus processing time.
                 </div>
 
                 <button
                   onClick={() => handleTriggerJudge(inspectedCaseId)}
                   disabled={!isConnected || !inspectedCaseId}
-                  className="w-full py-3.5 px-4 rounded-xl text-xs font-bold btn-primary-green cursor-pointer disabled:opacity-50 shadow-md flex items-center justify-center gap-2"
+                  className="w-full py-3 px-4 rounded-xl text-xs font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-md flex items-center justify-center gap-2"
                 >
                   <Gavel className="w-4 h-4" />
                   <span>Execute judge({inspectedCaseId.substring(0, 6)}...)</span>
@@ -1059,10 +1049,10 @@ export const AppWorkbench: React.FC = () => {
 
             {/* TAB 5: MANUAL LOOKUP & DISCOVERY LISTS */}
             {activeTab === 'inspect' && (
-              <div className="soft-surface p-6 space-y-5">
+              <div className="silver-frame p-6 space-y-5">
                 <div className="space-y-1">
-                  <h3 className="font-bold text-stone-900 text-base">Look Up Case by ID</h3>
-                  <p className="text-xs text-stone-600">
+                  <h3 className="font-bold text-[#eef0f2] text-base">Look Up Case by ID</h3>
+                  <p className="text-xs text-[#9fa5b0]">
                     Query any dispute record and stability certificate directly from Studionet storage.
                   </p>
                 </div>
@@ -1073,27 +1063,27 @@ export const AppWorkbench: React.FC = () => {
                     value={lookupInput}
                     onChange={(e) => setLookupInput(e.target.value)}
                     placeholder="Enter 12-char Case ID"
-                    className="flex-1 text-xs font-mono p-2.5 rounded-xl border border-stone-200 bg-stone-50/50"
+                    className="silver-input flex-1 text-xs font-mono p-2.5 rounded-xl"
                   />
                   <button
                     onClick={() => {
                       if (lookupInput.trim()) loadCaseData(lookupInput.trim());
                     }}
-                    className="px-4 py-2 text-xs font-bold btn-primary-green rounded-xl cursor-pointer"
+                    className="px-4 py-2 text-xs font-bold btn-silver-primary rounded-xl cursor-pointer"
                   >
                     Query
                   </button>
                 </div>
 
                 {/* Discovery lists: Global & User */}
-                <div className="space-y-4 pt-3 border-t border-stone-100">
+                <div className="space-y-4 pt-3 border-t border-white/[0.08]">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-stone-300 uppercase tracking-wider">
                       Recent Global Cases (list_cases)
                     </span>
                     <button
                       onClick={refreshDiscoveryLists}
-                      className="text-stone-500 hover:text-stone-800 text-xs flex items-center gap-1"
+                      className="text-[#9fa5b0] hover:text-white text-xs flex items-center gap-1 cursor-pointer"
                     >
                       <RefreshCw className={`w-3 h-3 ${refreshingList ? 'animate-spin' : ''}`} />
                       <span>Refresh</span>
@@ -1102,7 +1092,7 @@ export const AppWorkbench: React.FC = () => {
 
                   <div className="flex flex-wrap gap-1.5">
                     {recentGlobalCases.length === 0 ? (
-                      <span className="text-xs text-stone-500 italic">No global cases fetched</span>
+                      <span className="text-xs text-[#6c727d] italic">No global cases fetched</span>
                     ) : (
                       recentGlobalCases.map((id) => (
                         <button
@@ -1110,8 +1100,8 @@ export const AppWorkbench: React.FC = () => {
                           onClick={() => loadCaseData(id)}
                           className={`px-2.5 py-1 rounded-lg text-xs font-mono transition cursor-pointer ${
                             inspectedCaseId === id
-                              ? 'bg-emerald-600 text-white font-bold'
-                              : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                              ? 'bg-white/[0.15] text-white border border-white/[0.22] font-bold'
+                              : 'silver-pill hover:text-white hover:bg-white/[0.08]'
                           }`}
                         >
                           {id}
@@ -1122,12 +1112,12 @@ export const AppWorkbench: React.FC = () => {
 
                   {isConnected && (
                     <div className="space-y-2 pt-2">
-                      <span className="text-xs font-bold text-stone-800 uppercase tracking-wider block">
+                      <span className="text-xs font-bold text-stone-300 uppercase tracking-wider block">
                         My Cases (get_cases_by_party)
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {userCases.length === 0 ? (
-                          <span className="text-xs text-stone-500 italic">No cases opened by this address</span>
+                          <span className="text-xs text-[#6c727d] italic">No cases opened by this address</span>
                         ) : (
                           userCases.map((id) => (
                             <button
@@ -1135,8 +1125,8 @@ export const AppWorkbench: React.FC = () => {
                               onClick={() => loadCaseData(id)}
                               className={`px-2.5 py-1 rounded-lg text-xs font-mono transition cursor-pointer ${
                                 inspectedCaseId === id
-                                  ? 'bg-emerald-600 text-white font-bold'
-                                  : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                                  ? 'bg-white/[0.15] text-white border border-white/[0.22] font-bold'
+                                  : 'silver-pill hover:text-white hover:bg-white/[0.08]'
                               }`}
                             >
                               {id}
@@ -1153,21 +1143,21 @@ export const AppWorkbench: React.FC = () => {
 
           {/* Right Column: Active Stability Certificate & Case Viewer (7 cols) */}
           <div className="lg:col-span-7 space-y-6">
-            <div className="soft-surface-raised p-6 sm:p-8 space-y-6">
+            <div className="silver-frame-raised p-6 sm:p-8 space-y-6">
               {/* Header with Case ID and Status */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-stone-100">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/[0.08]">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono bg-stone-100 text-stone-700 px-2.5 py-0.5 rounded-lg border border-stone-200 font-semibold">
+                    <span className="silver-pill text-xs font-mono px-2.5 py-0.5 rounded-lg font-semibold text-stone-300">
                       ID: {inspectedCaseId || 'None'}
                     </span>
                     {caseRecord && (
-                      <span className="text-xs px-2.5 py-0.5 rounded-lg font-bold bg-stone-100 text-stone-800">
+                      <span className="text-xs px-2.5 py-0.5 rounded-lg font-bold bg-white/[0.06] border border-white/[0.10] text-[#eef0f2]">
                         Status: {caseRecord.status}
                       </span>
                     )}
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-stone-900 leading-tight">
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-[#eef0f2] leading-tight">
                     {caseRecord?.title || 'Stability Certificate'}
                   </h2>
                 </div>
@@ -1176,35 +1166,35 @@ export const AppWorkbench: React.FC = () => {
                   <button
                     onClick={() => loadCaseData(inspectedCaseId)}
                     disabled={loadingCase}
-                    className="p-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 transition cursor-pointer"
+                    className="p-2 rounded-xl silver-frame-inset hover:border-white/[0.20] text-[#9fa5b0] hover:text-white transition cursor-pointer"
                     title="Refresh case state"
                   >
-                    <RefreshCw className={`w-4 h-4 ${loadingCase ? 'animate-spin text-emerald-600' : ''}`} />
+                    <RefreshCw className={`w-4 h-4 ${loadingCase ? 'animate-spin text-white' : ''}`} />
                   </button>
                 </div>
               </div>
 
               {/* Case Load Error Alert */}
               {caseLoadError && (
-                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+                <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
                   <span>{caseLoadError}</span>
                 </div>
               )}
 
               {/* Stability Verdict Banner */}
-              <div className="p-4 rounded-2xl bg-stone-50/70 border border-stone-200/80 space-y-2">
+              <div className="p-4 rounded-xl silver-frame-inset space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-stone-600 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-stone-400 uppercase tracking-wider">
                     Position-Invariance Stability Verdict
                   </span>
                   {renderStabilityBadge(certificate?.current_decision || caseRecord?.rounds?.slice(-1)[0]?.decision || '')}
                 </div>
-                <div className="text-xs text-stone-600">
+                <div className="text-xs text-[#9fa5b0]">
                   {certificate?.current_decision ? (
                     <span>
                       Raw on-chain verdict:{' '}
-                      <code className="font-mono font-bold text-stone-900 bg-stone-200/60 px-1.5 py-0.5 rounded">
+                      <code className="font-mono font-bold text-[#eef0f2] bg-white/[0.08] px-1.5 py-0.5 rounded border border-white/[0.10]">
                         {certificate.current_decision}
                       </code>
                     </span>
@@ -1217,26 +1207,26 @@ export const AppWorkbench: React.FC = () => {
               {/* Parties & Spec Breakdown */}
               {caseRecord && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-3.5 rounded-2xl bg-white border border-stone-200/80 space-y-1">
-                    <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wide block">
+                  <div className="p-3.5 rounded-xl silver-frame-inset space-y-1">
+                    <span className="text-[11px] font-bold text-stone-300 uppercase tracking-wide block">
                       Party 1 (Opener)
                     </span>
-                    <span className="text-xs font-mono text-stone-800 block truncate" title={caseRecord.opener}>
+                    <span className="text-xs font-mono text-[#eef0f2] block truncate" title={caseRecord.opener}>
                       {caseRecord.opener}
                     </span>
-                    <div className="text-[11px] text-stone-500 truncate">
+                    <div className="text-[11px] text-[#6c727d] truncate">
                       Aliases: {caseRecord.aliases1?.join(', ') || 'None'}
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-white border border-stone-200/80 space-y-1">
-                    <span className="text-[11px] font-bold text-stone-700 uppercase tracking-wide block">
+                  <div className="p-3.5 rounded-xl silver-frame-inset space-y-1">
+                    <span className="text-[11px] font-bold text-stone-300 uppercase tracking-wide block">
                       Party 2 (Opposing)
                     </span>
-                    <span className="text-xs font-mono text-stone-800 block truncate" title={caseRecord.opposing}>
+                    <span className="text-xs font-mono text-[#eef0f2] block truncate" title={caseRecord.opposing}>
                       {caseRecord.opposing}
                     </span>
-                    <div className="text-[11px] text-stone-500 truncate">
+                    <div className="text-[11px] text-[#6c727d] truncate">
                       Aliases: {caseRecord.aliases2?.join(', ') || 'None'}
                     </div>
                   </div>
@@ -1246,21 +1236,21 @@ export const AppWorkbench: React.FC = () => {
               {/* Criteria List */}
               {caseRecord?.criteria && (
                 <div className="space-y-2">
-                  <span className="text-xs font-bold text-stone-800 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-stone-300 uppercase tracking-wider block">
                     Adjudication Criteria & Weights
                   </span>
                   <div className="space-y-2">
                     {caseRecord.criteria.map((c, idx) => (
                       <div
                         key={idx}
-                        className="p-3 rounded-xl bg-white border border-stone-200/80 flex items-center justify-between text-xs"
+                        className="p-3 rounded-xl silver-frame-inset flex items-center justify-between text-xs"
                       >
                         <div className="space-y-0.5 pr-4">
-                          <span className="font-semibold text-stone-900 block">{c.text}</span>
-                          <span className="text-[10px] text-stone-500 font-mono">ID: {c.id}</span>
+                          <span className="font-medium text-[#eef0f2] block">{c.text}</span>
+                          <span className="text-[10px] text-[#6c727d] font-mono">ID: {c.id}</span>
                         </div>
                         <div className="shrink-0 text-right">
-                          <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          <span className="font-mono font-bold text-stone-200 bg-white/[0.08] px-2 py-0.5 rounded border border-white/[0.12]">
                             {(c.weight_bp / 100).toFixed(1)}%
                           </span>
                         </div>
@@ -1274,14 +1264,14 @@ export const AppWorkbench: React.FC = () => {
               {caseRecord?.evidence && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-stone-300 uppercase tracking-wider">
                       Submitted Evidence Log ({caseRecord.evidence.length})
                     </span>
-                    <span className="text-[11px] text-stone-500">Max 3 entries per party</span>
+                    <span className="text-[11px] text-[#6c727d]">Max 3 entries per party</span>
                   </div>
 
                   {caseRecord.evidence.length === 0 ? (
-                    <div className="p-4 rounded-xl bg-stone-50 border border-dashed border-stone-200 text-xs text-stone-500 text-center">
+                    <div className="p-4 rounded-xl silver-frame-inset border border-dashed border-white/[0.10] text-xs text-[#6c727d] text-center">
                       No evidence has been entered for this dispute yet.
                     </div>
                   ) : (
@@ -1289,21 +1279,21 @@ export const AppWorkbench: React.FC = () => {
                       {caseRecord.evidence.map((ev, idx) => (
                         <div
                           key={idx}
-                          className="p-3.5 rounded-xl bg-white border border-stone-200/80 text-xs space-y-1.5"
+                          className="p-3.5 rounded-xl silver-frame-inset text-xs space-y-1.5"
                         >
                           <div className="flex items-center justify-between text-[11px]">
                             <span
-                              className={`font-bold px-2 py-0.5 rounded-md ${
+                              className={`font-semibold px-2 py-0.5 rounded-md border ${
                                 ev.by === 'PARTY_1'
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-stone-200 text-stone-800'
+                                  ? 'bg-white/[0.08] border-white/[0.14] text-white'
+                                  : 'bg-stone-900 border-white/[0.08] text-stone-300'
                               }`}
                             >
                               Submitted by {ev.by}
                             </span>
-                            <span className="text-stone-400 font-mono">Entry #{idx + 1}</span>
+                            <span className="text-[#6c727d] font-mono">Entry #{idx + 1}</span>
                           </div>
-                          <p className="text-stone-700 leading-relaxed font-sans">{ev.text}</p>
+                          <p className="text-[#9fa5b0] leading-relaxed font-sans">{ev.text}</p>
                         </div>
                       ))}
                     </div>
@@ -1314,22 +1304,22 @@ export const AppWorkbench: React.FC = () => {
               {/* Adjudication Rounds History */}
               {caseRecord?.rounds && caseRecord.rounds.length > 0 && (
                 <div className="space-y-2">
-                  <span className="text-xs font-bold text-stone-800 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-stone-300 uppercase tracking-wider block">
                     Consensus Round History
                   </span>
                   <div className="space-y-2">
                     {caseRecord.rounds.map((rnd, idx) => (
                       <div
                         key={idx}
-                        className="p-3 rounded-xl bg-white border border-stone-200/80 flex items-center justify-between text-xs"
+                        className="p-3 rounded-xl silver-frame-inset flex items-center justify-between text-xs"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-full bg-stone-100 text-stone-700 flex items-center justify-center font-bold text-[10px]">
+                          <span className="w-5 h-5 rounded-md bg-white/[0.08] border border-white/[0.12] text-white flex items-center justify-center font-bold text-[10px]">
                             {rnd.n}
                           </span>
-                          <span className="font-semibold text-stone-900">Round {rnd.n}</span>
+                          <span className="font-medium text-[#eef0f2]">Round {rnd.n}</span>
                         </div>
-                        <div className="font-mono text-xs font-semibold text-emerald-800">
+                        <div className="font-mono text-xs font-semibold text-emerald-400">
                           {rnd.decision}
                         </div>
                       </div>
@@ -1339,33 +1329,33 @@ export const AppWorkbench: React.FC = () => {
               )}
 
               {/* Downstream Consumer & Finalization Section */}
-              <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200/80 space-y-3">
+              <div className="p-4 rounded-xl silver-frame-inset space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4 text-emerald-700" />
-                    <span className="text-xs font-bold text-stone-900">
+                    <Building className="w-4 h-4 text-stone-300" />
+                    <span className="text-xs font-bold text-[#eef0f2]">
                       Downstream Consumer Settlement
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-stone-500">
+                  <span className="text-[11px] font-mono text-[#6c727d]">
                     Consumer: {CONSUMER_CONTRACT_ADDRESS.substring(0, 8)}...
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-2.5 rounded-xl bg-white border border-stone-200">
-                    <span className="text-[10px] text-stone-500 block uppercase font-bold">
+                  <div className="p-2.5 rounded-lg bg-[#0c0d0f] border border-white/[0.08]">
+                    <span className="text-[10px] text-[#6c727d] block uppercase font-bold">
                       outcome_for_consumer
                     </span>
-                    <span className="font-mono font-bold text-stone-900">
+                    <span className="font-mono font-bold text-[#eef0f2]">
                       {consumerOutcome || 'NO_DECISION'}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white border border-stone-200">
-                    <span className="text-[10px] text-stone-500 block uppercase font-bold">
+                  <div className="p-2.5 rounded-lg bg-[#0c0d0f] border border-white/[0.08]">
+                    <span className="text-[10px] text-[#6c727d] block uppercase font-bold">
                       Settlement State
                     </span>
-                    <span className="font-mono font-bold text-stone-900">
+                    <span className="font-mono font-bold text-[#eef0f2]">
                       {consumerSettlement || 'Unsettled'}
                     </span>
                   </div>
@@ -1376,7 +1366,7 @@ export const AppWorkbench: React.FC = () => {
                     <button
                       onClick={() => handleFinalizeCase(inspectedCaseId)}
                       disabled={!isConnected}
-                      className="flex-1 py-2 px-3 rounded-xl text-xs font-bold btn-secondary-soft cursor-pointer"
+                      className="flex-1 py-2 px-3 rounded-xl text-xs font-bold btn-silver-glass cursor-pointer"
                     >
                       Finalize Case
                     </button>
@@ -1386,7 +1376,7 @@ export const AppWorkbench: React.FC = () => {
                     <button
                       onClick={() => handleConsumerSettle(inspectedCaseId)}
                       disabled={!isConnected}
-                      className="flex-1 py-2 px-3 rounded-xl text-xs font-bold btn-primary-green cursor-pointer"
+                      className="flex-1 py-2 px-3 rounded-xl text-xs font-bold btn-silver-primary cursor-pointer"
                     >
                       Trigger Consumer Settle
                     </button>
