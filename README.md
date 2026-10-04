@@ -4,6 +4,7 @@
 
 Second-Opinion Desk is the official dApp interface for **MirrorJudge**, an Intelligent Contract deployed on GenLayer Studionet Preview. It solves the critical vulnerability of LLM position bias by evaluating dispute evidence twice: first canonically, then mirrored (parties swapped, criteria inverted, evidence re-ordered). Only verdicts that withstand their own mirror image receive a stability certificate.
 
+- **Live dApp URL**: [https://second-opinion-desk-genlayer.vercel.app](https://second-opinion-desk-genlayer.vercel.app)
 - **Canonical Contract Repository**: [huzyow155/mirrorjudge-genlayer](https://github.com/huzyow155/mirrorjudge-genlayer)
 - **Local Contract Reference**: [`contracts-reference/MirrorJudge.py`](./contracts-reference/MirrorJudge.py) (unmodified byte-for-byte copy)
 - **Deployed Intelligent Contract**: `0x30552D40A956d2D753AbAD429c90cB07f65Dabd0`
