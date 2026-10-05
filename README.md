@@ -7,9 +7,9 @@ Second-Opinion Desk is the official dApp interface for **MirrorJudge**, an Intel
 - **Production Preview URL**: [https://second-opinion-desk-genlayer.vercel.app](https://second-opinion-desk-genlayer.vercel.app)
 - **Canonical Contract Repository**: [huzyow155/mirrorjudge-genlayer](https://github.com/huzyow155/mirrorjudge-genlayer)
 - **Local Contract Reference**: [`contracts-reference/MirrorJudge.py`](./contracts-reference/MirrorJudge.py) (unmodified byte-for-byte copy)
-- **Deployed Intelligent Contract**: `0x30552D40A956d2D753AbAD429c90cB07f65Dabd0`
-- **Downstream Consumer Contract**: `0x6E295655a39A5f9aDFF8B087497737788aCC8881`
-- **GenLayer Explorer**: [View on Explorer](https://explorer-studio.genlayer.com/address/0x30552D40A956d2D753AbAD429c90cB07f65Dabd0)
+- **Deployed Intelligent Contract**: `0x3991d0817f8FD6B6632b1C2c21d234598CbF4e17`
+- **Downstream Consumer Contract**: `0x294FFDec366826F8682CFAAEbaf25DcAeBda9317`
+- **GenLayer Explorer**: [View on Explorer](https://explorer-studio.genlayer.com/address/0x3991d0817f8FD6B6632b1C2c21d234598CbF4e17)
 
 ---
 
@@ -17,9 +17,9 @@ Second-Opinion Desk is the official dApp interface for **MirrorJudge**, an Intel
 
 The intelligent contract code deployed on GenLayer Studionet Preview matches the local reference file byte-for-byte:
 
-- **Deploy Transaction Hash**: `0xb49227544fa1e4ba1631c8b422cf42438f5d355480a14540972509660693d5c7`
-- **Local Source Hash (SHA256)**: `1f4c4f1bdf5e58177adc780fafe5bfa22c6f786d6e78e3585062c98c2bacf1ee`
-- **Deployed Source Hash (SHA256)**: `1f4c4f1bdf5e58177adc780fafe5bfa22c6f786d6e78e3585062c98c2bacf1ee`
+- **Deploy Transaction Hash**: `0x8e6a7c865bd92a00c1c518325347d164842467e881079cbff68958cda1e474bd`
+- **Local Source Hash (SHA256)**: `a1bb39e06e6768505c818ab426d5fbd0b95a03b1c45e2e937ab6ad3074da63d8`
+- **Deployed Source Hash (SHA256)**: `a1bb39e06e6768505c818ab426d5fbd0b95a03b1c45e2e937ab6ad3074da63d8`
 - **Verification Method**: `eth_getTransactionByHash` on deploy tx -> base64-decode `data.contract_code` -> sha256 -> compare to local file hash.
 - **Match Result**: `true` (strictly verified via `scripts/test_live_reads.mjs`)
 
@@ -54,9 +54,9 @@ Reviewers can inspect these verified, immutable cases on Studionet immediately w
 
 | Demo | Case ID | Category | Verdict | Key Characteristic |
 | :--- | :--- | :--- | :--- | :--- |
-| **Demo A** | `ebe94dc89329` | Software Milestone | `DECIDED\|PARTY_1\|STABLE` | Clear-cut deliverable with git commit proof and counterparty confirmation. |
-| **Demo B** | `8408ccd5e6ef` | Joint Deliverable | `DECIDED\|SPLIT\|STABLE` | Balanced performance where both parties delivered, landing within margin threshold. |
-| **Demo C** | `36449cc60579` | Infrastructure SLA | `DECIDED\|PARTY_1\|STABLE` | Multi-round escalation: Round 1 `INSUFFICIENT` &rarr; Round 2 `STABLE` with uptime logs. |
+| **Demo A** | `99f9b7444e2a` | Software Milestone | `DECIDED\|PARTY_1\|STABLE` | Clear-cut deliverable with git commit proof and counterparty confirmation. |
+| **Demo B** | `affb287df9cb` | Joint Deliverable | `INSUFFICIENT\|NONE\|NA` | Missing required evidence dispute correctly flagged by contract. |
+| **Demo C** | `bf29f5d7c7fd` | Infrastructure SLA | `DECIDED\|SPLIT\|STABLE` | Balanced SLA performance with mirrored consensus resulting in equal split. |
 
 ---
 

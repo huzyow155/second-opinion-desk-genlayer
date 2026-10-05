@@ -1,7 +1,7 @@
 import { createClient, chains, createAccount } from 'genlayer-js';
 import fs from 'fs';
 
-const MIRROR_JUDGE_ADDRESS = '0x30552D40A956d2D753AbAD429c90cB07f65Dabd0';
+const MIRROR_JUDGE_ADDRESS = '0x3991d0817f8FD6B6632b1C2c21d234598CbF4e17';
 const RPC_URL = 'https://studio.genlayer.com/api';
 
 const studionet = chains?.studionet || {

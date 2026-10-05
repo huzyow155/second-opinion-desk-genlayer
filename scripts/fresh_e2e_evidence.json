@@ -1,39 +1,39 @@
 {
-  "caseId": "2f37ceadd998",
-  "title": "E2E Milestone Acceptance Verification 9062",
-  "party1": "0xC42474dC8F24E84688977F85c77a3f03158D0274",
-  "party2": "0x5BdF767DdF8946262ED533f7961Bb838E3643E0c",
+  "caseId": "b2e5106f950e",
+  "title": "E2E Milestone Acceptance Verification 8897",
+  "party1": "0x2305a48348e09567264d1b055e41C0531cF8944C",
+  "party2": "0x7e5747A1acCC8A42848d1e3Cd9dEA4245d99c49A",
   "openTx": {
-    "hash": "0xe524425dbab204244582e79d56b9b93b985d386c0f05a7b6acf5542dfce6accd",
+    "hash": "0xcfee413d0d6ebaa79dbf05d4b1b71eab76a6becd21a73ef0fb7267d969d74e02",
     "status": "ACCEPTED",
     "leaderExecution": "SUCCESS",
-    "elapsedSec": "7.25"
+    "elapsedSec": "7.24"
   },
   "ev1Tx": {
-    "hash": "0x65dfe1202bac428c0d8d3844f7172de7a6aac590dc892e686ae876717010091c",
+    "hash": "0x96c0e2f3972de739ec88a55e48e5cc43af02ad6205d4d9e7565cf7cde7decee0",
     "status": "ACCEPTED",
     "leaderExecution": "SUCCESS",
-    "elapsedSec": "3.64"
+    "elapsedSec": "3.67"
   },
   "ev2Tx": {
-    "hash": "0x748147fe37c05a33032d5282f56eb8dddc64e74be3fc18beceb5c6724aa683ed",
+    "hash": "0xf33a7d99f285dcef536e21a62ccd112da0371748c268788281294a897211e4ea",
     "status": "ACCEPTED",
     "leaderExecution": "SUCCESS",
-    "elapsedSec": "10.30"
+    "elapsedSec": "3.66"
   },
   "judgeTx": {
-    "hash": "0xfc3f8eb8e4c20b443118c9f7d6bb53de9a85043993cd38ee102a9ed61c235ea5",
+    "hash": "0x6dbbbb245bdd21a3d82e78beb449e3ad168df36df41ed1792dd0bebec0b182ab",
     "status": "ACCEPTED",
     "leaderExecution": "SUCCESS",
-    "latencySec": "58.95"
+    "latencySec": "55.56"
   },
-  "totalDurationSec": "90.21",
+  "totalDurationSec": "79.45",
   "certificate": {
     "schema_version": "1.0",
-    "case_id": "2f37ceadd998",
-    "title": "E2E Milestone Acceptance Verification 9062",
-    "opener": "0xC42474dC8F24E84688977F85c77a3f03158D0274",
-    "opposing": "0x5BdF767DdF8946262ED533f7961Bb838E3643E0c",
+    "case_id": "b2e5106f950e",
+    "title": "E2E Milestone Acceptance Verification 8897",
+    "opener": "0x2305a48348e09567264d1b055e41C0531cF8944C",
+    "opposing": "0x7e5747A1acCC8A42848d1e3Cd9dEA4245d99c49A",
     "status": "JUDGED",
     "config": {
       "margin_bp": 1500,
