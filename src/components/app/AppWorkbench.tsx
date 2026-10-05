@@ -704,38 +704,38 @@ export const AppWorkbench: React.FC = () => {
                       </span>
                     </div>
                     <div className="text-xs sm:text-[13px] text-[#9fa5b0] mb-2">
-                      Balanced deliverable landing within tolerance threshold.
+                      Missing counterparty evidence resolved deterministically without LLM bias.
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-semibold text-amber-400 motion-badge">
-                        DECIDED · SPLIT · STABLE
+                      <span className="text-xs font-mono font-semibold text-blue-400 motion-badge">
+                        INSUFFICIENT · NONE · PENDING
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
                     </div>
                   </button>
 
-                  {/* Demo Escalated */}
+                  {/* Demo C */}
                   <button
-                    onClick={() => loadCaseData(VERIFIED_DEMO_CASES.DEMO_ESCALATED.id)}
+                    onClick={() => loadCaseData(VERIFIED_DEMO_CASES.DEMO_C.id)}
                     className={`w-full p-3.5 rounded-xl border text-left transition cursor-pointer stagger-item ${
-                      inspectedCaseId === VERIFIED_DEMO_CASES.DEMO_ESCALATED.id
+                      inspectedCaseId === VERIFIED_DEMO_CASES.DEMO_C.id
                         ? 'bg-white/[0.08] border-white/[0.25] shadow-[0_0_12px_rgba(255,255,255,0.04)]'
                         : 'bg-[#121417]/70 border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03]'
                     }`}
                     style={{ '--reveal-delay': '220ms' } as React.CSSProperties}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-stone-300">Demo C · Escalation</span>
+                      <span className="text-xs font-bold text-stone-300">Demo C</span>
                       <span className="text-[10px] font-mono text-[#6c727d]">
-                        {VERIFIED_DEMO_CASES.DEMO_ESCALATED.id}
+                        {VERIFIED_DEMO_CASES.DEMO_C.id}
                       </span>
                     </div>
                     <div className="text-xs sm:text-[13px] text-[#9fa5b0] mb-2">
-                      Multi-round proof escalation via supplemental audit telemetry.
+                      Balanced deliverable landing within tolerance threshold.
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-semibold text-blue-300 motion-badge">
-                        01 INSUFFICIENT &rarr; 02 STABLE
+                      <span className="text-xs font-mono font-semibold text-amber-400 motion-badge">
+                        DECIDED · SPLIT · STABLE
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
                     </div>

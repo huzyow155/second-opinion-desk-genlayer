@@ -36,26 +36,37 @@ async function run() {
   console.log('Demo A Decided?:', demoACert.is_decided);
 
   // Test Demo B
-  console.log('\n[2] Testing Demo B (bf29f5d7c7fd)...');
+  console.log('\n[2] Testing Demo B (affb287df9cb)...');
   const demoBCertRaw = await client.readContract({
     address: MIRROR_JUDGE_ADDRESS,
     functionName: 'get_certificate',
-    args: ['bf29f5d7c7fd'],
+    args: ['affb287df9cb'],
   });
   const demoBCert = typeof demoBCertRaw === 'string' ? JSON.parse(demoBCertRaw) : demoBCertRaw;
   console.log('Demo B Decision:', demoBCert.current_decision);
   console.log('Demo B Decided?:', demoBCert.is_decided);
 
-  // Test Demo Escalated
-  console.log('\n[3] Testing Demo Escalated (74320c3924e2)...');
+  // Test Demo C
+  console.log('\n[3] Testing Demo C (bf29f5d7c7fd)...');
+  const demoCCertRaw = await client.readContract({
+    address: MIRROR_JUDGE_ADDRESS,
+    functionName: 'get_certificate',
+    args: ['bf29f5d7c7fd'],
+  });
+  const demoCCert = typeof demoCCertRaw === 'string' ? JSON.parse(demoCCertRaw) : demoCCertRaw;
+  console.log('Demo C Decision:', demoCCert.current_decision);
+  console.log('Demo C Decided?:', demoCCert.is_decided);
+
+  // Test Contradictory Proof Case
+  console.log('\n[3b] Testing Contradictory Hardening Case (74320c3924e2)...');
   const demoEscCertRaw = await client.readContract({
     address: MIRROR_JUDGE_ADDRESS,
     functionName: 'get_certificate',
     args: ['74320c3924e2'],
   });
   const demoEscCert = typeof demoEscCertRaw === 'string' ? JSON.parse(demoEscCertRaw) : demoEscCertRaw;
-  console.log('Demo Escalated Decision:', demoEscCert.current_decision);
-  console.log('Demo Escalated Rounds Count:', demoEscCert.rounds.length);
+  console.log('Contradictory Case Decision:', demoEscCert.current_decision);
+  console.log('Contradictory Case Rounds Count:', demoEscCert.rounds.length);
 
   // Test Negative Lookup (Gate 2 Negative Check)
   console.log('\n[4] Testing Negative Case Lookup (nonexistent99)...');
