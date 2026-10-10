@@ -59,8 +59,14 @@ export const AppWorkbench: React.FC = () => {
   // Simplified navigation tabs: Cases | Open | Evidence | Judge
   const [activeTab, setActiveTab] = useState<'cases' | 'open' | 'evidence' | 'judge'>('cases');
 
+  const getInitialCaseId = (): string => {
+    const hashQuery = window.location.hash.split('?')[1] || '';
+    const params = new URLSearchParams(hashQuery || window.location.search);
+    return params.get('case')?.trim().toLowerCase() || VERIFIED_DEMO_CASES.DEMO_A.id;
+  };
+
   // Authoritative case state
-  const [inspectedCaseId, setInspectedCaseId] = useState<string>(VERIFIED_DEMO_CASES.DEMO_A.id);
+  const [inspectedCaseId, setInspectedCaseId] = useState<string>(getInitialCaseId);
   const [caseRecord, setCaseRecord] = useState<CaseRecord | null>(null);
   const [certificate, setCertificate] = useState<StabilityCertificate | null>(null);
   const [consumerOutcome, setConsumerOutcome] = useState<string>('');
@@ -161,9 +167,9 @@ export const AppWorkbench: React.FC = () => {
     }
   }, []);
 
-  // Initial load: Fetch Demo A and global discovery lists
+  // Initial load: Fetch initial case and global discovery lists
   useEffect(() => {
-    loadCaseData(VERIFIED_DEMO_CASES.DEMO_A.id);
+    loadCaseData(getInitialCaseId());
     refreshDiscoveryLists();
   }, [loadCaseData]);
 
@@ -740,7 +746,7 @@ export const AppWorkbench: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono font-semibold text-emerald-400 motion-badge">
-                        DECIDED · PARTY 1 · STABLE
+                        DECIDED · PARTY 1
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
                     </div>
@@ -767,7 +773,7 @@ export const AppWorkbench: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono font-semibold text-blue-400 motion-badge">
-                        INSUFFICIENT · NONE · PENDING
+                        INSUFFICIENT · NONE
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
                     </div>
@@ -794,7 +800,34 @@ export const AppWorkbench: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono font-semibold text-amber-400 motion-badge">
-                        DECIDED · SPLIT · STABLE
+                        DECIDED · SPLIT
+                      </span>
+                      <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
+                    </div>
+                  </button>
+
+                  {/* Demo D */}
+                  <button
+                    onClick={() => loadCaseData(VERIFIED_DEMO_CASES.DEMO_D.id)}
+                    className={`w-full p-3.5 rounded-xl border text-left transition cursor-pointer stagger-item ${
+                      inspectedCaseId === VERIFIED_DEMO_CASES.DEMO_D.id
+                        ? 'bg-white/[0.08] border-white/[0.25] shadow-[0_0_12px_rgba(255,255,255,0.04)]'
+                        : 'bg-[#121417]/70 border-white/[0.08] hover:border-white/[0.16] hover:bg-white/[0.03]'
+                    }`}
+                    style={{ '--reveal-delay': '260ms' } as React.CSSProperties}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-stone-300">Demo D</span>
+                      <span className="text-[10px] font-mono text-[#6c727d]">
+                        {VERIFIED_DEMO_CASES.DEMO_D.id}
+                      </span>
+                    </div>
+                    <div className="text-xs sm:text-[13px] text-[#9fa5b0] mb-2">
+                      Ambiguous addendum attribution where canonical and mirrored passes diverge.
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-semibold text-rose-400 motion-badge">
+                        UNSTABLE · NONE · UNSTABLE
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
                     </div>
@@ -1255,7 +1288,17 @@ export const AppWorkbench: React.FC = () => {
                           </span>
                           <span className="text-[#9fa5b0]">Round {rnd.n}</span>
                         </div>
-                        <div className="font-mono font-semibold text-emerald-400 text-xs sm:text-[13px] motion-badge">
+                        <div
+                          className={`font-mono font-semibold text-xs sm:text-[13px] motion-badge ${
+                            parseDecision(rnd.decision).badgeType === 'unstable'
+                              ? 'text-rose-400'
+                              : parseDecision(rnd.decision).badgeType === 'split'
+                                ? 'text-amber-400'
+                                : parseDecision(rnd.decision).badgeType === 'insufficient'
+                                  ? 'text-blue-400'
+                                  : 'text-emerald-400'
+                          }`}
+                        >
                           {rnd.decision}
                         </div>
                       </div>

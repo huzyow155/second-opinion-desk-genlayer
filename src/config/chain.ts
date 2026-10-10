@@ -34,12 +34,12 @@ export const VERIFIED_DEMO_CASES = {
     expectedOutcome: 'SPLIT',
     category: 'Infrastructure SLA',
   },
-  DEMO_ESCALATED: {
-    id: '8f128188b6c6',
-    title: 'API Gateway Infrastructure SLA Milestone Dispute',
-    description: 'Balanced dispute with symmetrical assertions where dual-pass mirroring produces a stable SPLIT verdict across validators.',
-    expectedDecision: 'DECIDED|SPLIT|STABLE',
-    expectedOutcome: 'SPLIT',
-    category: 'Infrastructure SLA',
+  DEMO_D: {
+    id: 'cbbed41fefc3',
+    title: 'Cross-Border Escrow & SLA Addendum Attribution Dispute',
+    description: 'Ambiguous addendum attribution where canonical and mirrored passes diverge, producing an UNSTABLE certificate.',
+    expectedDecision: 'UNSTABLE|NONE|UNSTABLE',
+    expectedOutcome: 'PENDING',
+    category: 'Escrow Addendum',
   },
 };

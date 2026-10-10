@@ -10,7 +10,7 @@ export const AppContent: React.FC = () => {
   // Sync state with URL hash
   const getTabFromHash = (): 'landing' | 'app' => {
     const hash = window.location.hash.toLowerCase();
-    if (hash === '#/app' || hash === '#app' || hash === '#/workbench') {
+    if (hash.startsWith('#/app') || hash.startsWith('#app') || hash.startsWith('#/workbench')) {
       return 'app';
     }
     return 'landing';

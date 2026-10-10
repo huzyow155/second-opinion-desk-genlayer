@@ -57,6 +57,17 @@ async function run() {
   console.log('Demo C Decision:', demoCCert.current_decision);
   console.log('Demo C Decided?:', demoCCert.is_decided);
 
+  // Test Demo D (UNSTABLE)
+  console.log('\n[3b] Testing Demo D (cbbed41fefc3)...');
+  const demoDCertRaw = await client.readContract({
+    address: MIRROR_JUDGE_ADDRESS,
+    functionName: 'get_certificate',
+    args: ['cbbed41fefc3'],
+  });
+  const demoDCert = typeof demoDCertRaw === 'string' ? JSON.parse(demoDCertRaw) : demoDCertRaw;
+  console.log('Demo D Decision:', demoDCert.current_decision);
+  console.log('Demo D Decided?:', demoDCert.is_decided);
+
   // Test Negative Lookup (Gate 2 Negative Check)
   console.log('\n[4] Testing Negative Case Lookup (nonexistent99)...');
   try {

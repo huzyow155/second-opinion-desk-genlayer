@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:parser": "node scripts/test_decision_parser.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

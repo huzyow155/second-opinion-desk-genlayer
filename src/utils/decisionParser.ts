@@ -42,8 +42,19 @@ export function parseDecision(rawDecision?: string | null): ParsedDecision {
 
   // 1. DECIDED branch
   if (statusToken === 'DECIDED') {
+    const effectiveStability: 'STABLE' | 'UNSTABLE' | 'NA' =
+      stabilityToken === 'STABLE'
+        ? 'STABLE'
+        : stabilityToken === 'UNSTABLE'
+          ? 'UNSTABLE'
+          : 'NA';
+    const isStable = effectiveStability === 'STABLE';
+    const isSplit = winnerToken === 'SPLIT';
+
     let explanation = 'Dispute decided by consensus.';
-    if (winnerToken === 'PARTY_1') {
+    if (!isStable) {
+      explanation = 'Outcome reached a tentative winner token but stability is not confirmed.';
+    } else if (winnerToken === 'PARTY_1') {
       explanation = 'Both evaluation passes favored Party 1 within the configured tolerance.';
     } else if (winnerToken === 'PARTY_2') {
       explanation = 'Both evaluation passes favored Party 2 within the configured tolerance.';
@@ -51,15 +62,20 @@ export function parseDecision(rawDecision?: string | null): ParsedDecision {
       explanation = 'Both parties fulfilled reciprocal obligations, landing within the margin threshold.';
     }
 
-    const isSplit = winnerToken === 'SPLIT';
     return {
       raw,
       status: 'DECIDED',
       winner: winnerToken,
-      stability: stabilityToken === 'STABLE' ? 'STABLE' : stabilityToken,
-      label: isSplit ? 'DECIDED · SPLIT · STABLE' : `DECIDED · ${winnerToken.replace('_', ' ')} · STABLE`,
-      badgeType: isSplit ? 'split' : 'stable',
-      certificateTitle: isSplit ? 'SPLIT DETERMINATION' : 'STABLE CERTIFICATE',
+      stability: effectiveStability,
+      label: isSplit
+        ? `DECIDED · SPLIT · ${effectiveStability}`
+        : `DECIDED · ${winnerToken.replace('_', ' ')} · ${effectiveStability}`,
+      badgeType: !isStable ? 'unstable' : isSplit ? 'split' : 'stable',
+      certificateTitle: !isStable
+        ? 'UNSTABLE CERTIFICATE'
+        : isSplit
+          ? 'SPLIT DETERMINATION'
+          : 'STABLE CERTIFICATE',
       explanation,
     };
   }
