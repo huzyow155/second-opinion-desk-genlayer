@@ -234,5 +234,166 @@
       "is_decided": false,
       "outcome": "PENDING"
     }
+  },
+  "freshE2ERun": {
+    "executedAt": "2026-10-10T18:11:17.079Z",
+    "mirrorJudgeAddress": "0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D",
+    "consumerContractAddress": "0x4FC86C019ec00Aa911A4D34986e33be2Cd94b837",
+    "caseId": "f3cbc82d81ae",
+    "title": "Fresh E2E Milestone Verification 1791655725361",
+    "party1": "0xB255280482e4Bed88072138D94B13ba5dA3dcC17",
+    "party2": "0x248933902dFd12B2b5AD2d4C75Ee676128F03343",
+    "steps": {
+      "open_case": {
+        "txHash": "0xce372b1b580a8a77a2ff85ae1733643d9fe17b930760ed071b2cf3585fe301b6",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "SUCCESS",
+          "SUCCESS"
+        ],
+        "durationSec": 4,
+        "verified": true,
+        "readback": {
+          "case_id": "f3cbc82d81ae",
+          "status": "OPEN",
+          "title": "Fresh E2E Milestone Verification 1791655725361"
+        }
+      },
+      "add_evidence_party_1": {
+        "txHash": "0x0f81f28899545f4abed8e658122b07d7bb0e0f85d0bee6217594590a1a6c3372",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "SUCCESS",
+          "SUCCESS"
+        ],
+        "durationSec": 5,
+        "verified": true,
+        "readback": {
+          "evidenceCount": 1,
+          "lastEntryBy": "PARTY_1"
+        }
+      },
+      "add_evidence_party_2": {
+        "txHash": "0x3ea5f175b7d9692672a7db876590ac293e7084ed6b8e9422f61db3254f0aa2ed",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "SUCCESS",
+          "SUCCESS"
+        ],
+        "durationSec": 4,
+        "verified": true,
+        "readback": {
+          "evidenceCount": 2,
+          "lastEntryBy": "PARTY_2"
+        }
+      },
+      "judge": {
+        "txHash": "0x6429423749c7dd06e423893599f7121c46e3c009b9179d1fe7dfde00564e6100",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "SUCCESS",
+          "SUCCESS"
+        ],
+        "durationSec": 49,
+        "verified": true,
+        "readback": {
+          "schema_version": "1.0",
+          "case_id": "f3cbc82d81ae",
+          "title": "Fresh E2E Milestone Verification 1791655725361",
+          "opener": "0xB255280482e4Bed88072138D94B13ba5dA3dcC17",
+          "opposing": "0x248933902dFd12B2b5AD2d4C75Ee676128F03343",
+          "status": "JUDGED",
+          "config": {
+            "margin_bp": 1500,
+            "max_flips": 1,
+            "max_rounds": 3,
+            "criteria": [
+              {
+                "id": "milestone_delivery",
+                "text": "Which party substantiated full completion of milestone deliverables: PARTY_1 or PARTY_2?",
+                "weight_bp": 6000
+              },
+              {
+                "id": "spec_compliance",
+                "text": "Which party adhered to specifications and code standards: PARTY_1 or PARTY_2?",
+                "weight_bp": 4000
+              }
+            ]
+          },
+          "rounds": [
+            {
+              "n": 1,
+              "decision": "DECIDED|PARTY_1|STABLE"
+            }
+          ],
+          "current_decision": "DECIDED|PARTY_1|STABLE",
+          "is_decided": true,
+          "outcome": "PARTY_1"
+        }
+      },
+      "finalize": {
+        "txHash": "0xbda016ee5842470e3c43b3d9abe789182e46bab0cbfd75c967dae6b3aa78c8da",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "SUCCESS",
+          "SUCCESS"
+        ],
+        "durationSec": 8,
+        "verified": true,
+        "readback": {
+          "status": "FINAL"
+        }
+      },
+      "consumer_settle_dispute": {
+        "txHash": "0xc8201a7218aeba0f29a93b04b4df8980acda692f4d928b421cd836c95197a8f4",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "SUCCESS",
+          "SUCCESS"
+        ],
+        "durationSec": 6,
+        "verified": true,
+        "readback": {
+          "settlement": "SETTLED_PARTY_1"
+        }
+      }
+    },
+    "negativeChecks": {
+      "weightMinus1": {
+        "passed": true,
+        "txHash": "0xf25dacee93c44bdda73dc05e5470a597fad49a0dc5027a9b4e79d62387091292",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "ERROR",
+          "ERROR"
+        ],
+        "revertReason": "bad criterion weight"
+      },
+      "weight10001": {
+        "passed": true,
+        "txHash": "0x957490c3afc5858414d1001338251c121a4dc57b0905f8256fa7e454af4d62a5",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "ERROR",
+          "ERROR"
+        ],
+        "revertReason": "bad criterion weight"
+      },
+      "nonexistentCase": {
+        "caseId": "nonexist13ed",
+        "result": {
+          "ok": true,
+          "data": null
+        }
+      },
+      "unreachableRpc": {
+        "rpcUrl": "http://127.0.0.1:9",
+        "result": {
+          "ok": false,
+          "error": "An unknown RPC error occurred.\n\nDetails: fetch failed\nVersion: viem@2.57.2"
+        }
+      }
+    },
+    "totalDurationSec": "151.78"
   }
 }

@@ -45,9 +45,12 @@ export function getWriteClient(account: string, provider: any) {
 // READ METHODS (Distinguishes confirmed nonexistent cases from failed reads)
 // ---------------------------------------------------------------------------
 
-export async function fetchCase(caseId: string): Promise<ContractReadResult<CaseRecord>> {
+export async function fetchCase(
+  caseId: string,
+  client: any = publicClient
+): Promise<ContractReadResult<CaseRecord>> {
   try {
-    const raw: any = await publicClient.readContract({
+    const raw: any = await client.readContract({
       address: MIRROR_JUDGE_ADDRESS,
       functionName: 'get_case',
       args: [caseId],
@@ -252,13 +255,17 @@ export function extractRevertReason(receipt: any): string {
       return String(r.error);
     }
     if (r?.result) {
+      if (typeof r.result === 'object' && r.result !== null) {
+        const msg = r.result.payload ?? r.result.message ?? r.result.error ?? JSON.stringify(r.result);
+        if (msg) return String(msg);
+      }
       try {
         const decoded = atob(r.result);
         const clean = decoded.replace(/^\x01/, '').trim();
         if (clean) return clean;
       } catch {
         const str = String(r.result);
-        if (str && str !== '""') return str;
+        if (str && str !== '""' && str !== '[object Object]') return str;
       }
     }
   }
@@ -306,17 +313,60 @@ export async function waitForReceiptWithProgress(
   }
 
   try {
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash,
-      retries: 120,
-      interval: 3000,
-    });
+    let receipt: any = null;
+    let lastErr: any = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        receipt = await client.waitForTransactionReceipt({
+          hash: txHash,
+          retries: 120,
+          interval: 3000,
+        });
+        break;
+      } catch (pollErr: any) {
+        lastErr = pollErr;
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+    }
+    if (!receipt && lastErr) {
+      throw lastErr;
+    }
 
     if (timer) clearInterval(timer);
     const durationSec = Math.round((Date.now() - startTime) / 1000);
 
     // Multi-validator verification: check ALL leader_receipt entries
-    const leaderReceipts = receipt?.consensus_data?.leader_receipt || [];
+    const rawLeaderReceipts = receipt?.consensus_data?.leader_receipt || [];
+    const extraValidators = receipt?.consensus_data?.validators || [];
+    const activeExtraValidators = Array.isArray(extraValidators)
+      ? extraValidators.filter(
+          (v: any) =>
+            v?.vote !== 'idle' &&
+            v?.genvm_result?.error_code !== 'CONSENSUS_VALIDATOR_QUORUM_REACHED'
+        )
+      : [];
+
+    const leaderReceipts = Array.isArray(rawLeaderReceipts)
+      ? rawLeaderReceipts.map((r: any) => {
+          const isQuorumCancelledIdle =
+            r?.mode === 'validator' &&
+            r?.vote === 'idle' &&
+            r?.genvm_result?.error_code === 'CONSENSUS_VALIDATOR_QUORUM_REACHED';
+          if (
+            isQuorumCancelledIdle &&
+            activeExtraValidators.length > 0 &&
+            activeExtraValidators.every((v: any) => v?.execution_result === 'SUCCESS')
+          ) {
+            return activeExtraValidators[0];
+          }
+          return r;
+        })
+      : [];
+
+    if (receipt?.consensus_data && Array.isArray(rawLeaderReceipts)) {
+      receipt.consensus_data.leader_receipt = leaderReceipts;
+    }
+
     let allSuccess = true;
     let disagreementWarning: string | undefined;
 
@@ -364,8 +414,8 @@ export async function verifyPostWriteState(
   caseId: string,
   expected?: any
 ): Promise<{ verified: boolean; message: string; readData?: any }> {
-  // Give GenVM node state storage 500ms to settle view state
-  await new Promise((r) => setTimeout(r, 600));
+  // Give GenVM validator committee nodes 4s to propagate state before readback and subsequent writes
+  await new Promise((r) => setTimeout(r, 4000));
 
   if (action === 'open') {
     const res = await fetchCase(caseId);

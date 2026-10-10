@@ -1,7 +1,6 @@
 # UI Verification Proof: On-Chain `UNSTABLE` Case (`cbbed41fefc3`)
 
 ## 1. On-Chain Case & RPC Coordinates
-- **Production URL**: `https://second-opinion-desk-genlayer.vercel.app/#/app?case=cbbed41fefc3`
 - **Contract Address**: `0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D`
 - **Case ID**: `cbbed41fefc3`
 - **Title**: `Cross-Border Escrow & SLA Addendum Attribution Dispute`
@@ -12,14 +11,15 @@
 - **RPC View Call**: `get_certificate("cbbed41fefc3")`
 - **Field Read**: `current_decision = "UNSTABLE|NONE|UNSTABLE"`, `rounds[0].decision = "UNSTABLE|NONE|UNSTABLE"`
 
-## 2. Rendered DOM Assertions (Live Production Site)
-- **Badge text**: `UNSTABLE`
-- **Certificate title**: `UNSTABLE CERTIFICATE`
-- **On-chain Decision String**: `UNSTABLE|NONE|UNSTABLE`
-- **Standalone `STABLE` matches on page (`/(?<!UN)STABLE/gi`)**: `0`
+## 2. Rendered DOM Assertions (All 4 Demo Cases A, B, C, D)
+- **Demo A (`0551168cd4f5`)**: badge `stable` (`STABLE`), title `STABLE CERTIFICATE`
+- **Demo B (`4e4a3aa372e6`)**: badge `insufficient` (`INSUFFICIENT EVIDENCE`), title `INSUFFICIENT EVIDENCE`
+- **Demo C (`8f128188b6c6`)**: badge `split` (`SPLIT VERDICT`), title `SPLIT DETERMINATION`
+- **Demo D (`cbbed41fefc3`)**: badge `unstable` (`UNSTABLE`), title `UNSTABLE CERTIFICATE`
+- **Standalone `STABLE` matches on Demo D page (`/(?<!UN)STABLE/`)**: `0`
 - **Screenshot**: `docs/unstable_case_cbbed41fefc3.png`
 
-## 3. Captured Visible Text from Live Production Workbench (`https://second-opinion-desk-genlayer.vercel.app/#/app?case=cbbed41fefc3`)
+## 3. Captured Visible Text from Rendered Workbench (`/#/app?case=cbbed41fefc3`)
 ```text
 Second-Opinion Desk
 Bias-Cancelled On-Chain Adjudication
@@ -62,11 +62,11 @@ UNSTABLE · NONE · UNSTABLE
 Inspect
 Query
 RECENT CASES ON STUDIONET:
+f3cbc82d81ae
+0d139220ef5b
+6fd687d1eb8c
+43043d4b7066
 cbbed41fefc3
-6c8f8cd1415a
-8f128188b6c6
-4e4a3aa372e6
-0551168cd4f5
 ID: cbbed41fefc3
 Status: OPEN
 Cross-Border Escrow & SLA Addendum Attribution Dispute

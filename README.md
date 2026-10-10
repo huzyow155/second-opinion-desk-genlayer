@@ -111,12 +111,27 @@ npm install
 npm run dev
 ```
 
-Run parser unit/regression tests, live on-chain verification, and production build:
+Run the automated test suite or production build:
 ```bash
-npm run test:parser
-node scripts/test_live_reads.mjs
-npm run build
+npm run test:parser   # Decision string parser & weight validation unit tests (~1s)
+npm run test:e2e      # Live on-chain E2E lifecycle + negative RPC/weight checks (~120-160s)
+npm run test:ui       # Headless browser UI verification across Demos A, B, C, and D (~15-20s)
+npm run test:all      # Full sequential suite: test:parser && test:e2e && test:ui (~140-180s)
+npm run build         # Production TypeScript + Vite bundle
 ```
+
+---
+
+## Automated Verification & End-to-End Test Suite
+
+All test scripts import the single source of truth (`src/config/chain.ts` and `src/services/contractService.ts`) without duplicating contract addresses or receipt-verification logic:
+
+| Script | Command | Expected Runtime | Coverage |
+| :--- | :--- | :---: | :--- |
+| **Decision & Weight Parser** (`scripts/test_decision_parser.mjs`) | `npm run test:parser` | `~1s` | Verifies exact pipe-delimited token parsing (`DECIDED\|PARTY_1\|STABLE`, `DECIDED\|PARTY_2\|STABLE`, `DECIDED\|SPLIT\|STABLE`, `UNSTABLE\|NONE\|UNSTABLE`, `INSUFFICIENT\|NONE\|NA`), confirms `UNSTABLE\|NONE\|UNSTABLE` has `isStable === false` and `badgeType === 'unstable'`, and tests `validateCriteriaWeights` bounds (`-1`, `0`, `10001`, non-integers, sum $\neq 10000$). |
+| **Live On-Chain E2E** (`scripts/run_fresh_e2e.mjs`) | `npm run test:e2e` | `~120–160s` | Executes a fresh dispute lifecycle on GenLayer Studionet using real `contractService.ts` functions (`executeOpenCase` $\to$ `executeAddEvidence` P1 $\to$ `executeAddEvidence` P2 $\to$ `executeJudge` $\to$ `executeFinalize` $\to$ `executeConsumerSettle`). Asserts `status_name === 'ACCEPTED'`, every `leader_receipt` entry has `execution_result === 'SUCCESS'`, and `verifyPostWriteState` readback `verified === true` after each write. Also runs live negative checks: `open_case` with `weight_bp = -1` and `10001` (verifies GenVM rollback `"bad criterion weight"` via `extractRevertReason`), `fetchCase` on a random nonexistent case ID (`{ ok: true, data: null }`), and `fetchCase` against an unreachable RPC `http://127.0.0.1:9` (`{ ok: false }`, never `data: null`). Writes full trace to [`scripts/fresh_e2e_evidence.json`](./scripts/fresh_e2e_evidence.json) (latest fresh case `f3cbc82d81ae`). |
+| **Headless Browser Certificate UI** (`scripts/capture_unstable_ui.mjs`) | `npm run test:ui` | `~15–20s` | Launches the production build in headless Chromium (`page.goto` timeout 30s, `waitForSelector` timeout 20s, guaranteed browser close in `finally`), loads Demo A (`0551168cd4f5`), Demo B (`4e4a3aa372e6`), Demo C (`8f128188b6c6`), and Demo D (`cbbed41fefc3`) from live Studionet RPC, asserts rendered `data-badge-type` (`stable`, `insufficient`, `split`, `unstable`), and verifies `0` standalone `STABLE` occurrences (`/(?<!UN)STABLE/`) on Demo D. |
+| **Full Suite** | `npm run test:all` | `~140–180s` | Runs `npm run test:parser && npm run test:e2e && npm run test:ui` sequentially. |
 
 ---
 
