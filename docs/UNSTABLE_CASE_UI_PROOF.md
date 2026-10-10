@@ -1,6 +1,7 @@
 # UI Verification Proof: On-Chain `UNSTABLE` Case (`cbbed41fefc3`)
 
 ## 1. On-Chain Case & RPC Coordinates
+- **Production URL**: `https://second-opinion-desk-genlayer.vercel.app/#/app?case=cbbed41fefc3`
 - **Contract Address**: `0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D`
 - **Case ID**: `cbbed41fefc3`
 - **Title**: `Cross-Border Escrow & SLA Addendum Attribution Dispute`
@@ -11,14 +12,14 @@
 - **RPC View Call**: `get_certificate("cbbed41fefc3")`
 - **Field Read**: `current_decision = "UNSTABLE|NONE|UNSTABLE"`, `rounds[0].decision = "UNSTABLE|NONE|UNSTABLE"`
 
-## 2. Rendered DOM Assertions
+## 2. Rendered DOM Assertions (Live Production Site)
 - **Badge text**: `UNSTABLE`
 - **Certificate title**: `UNSTABLE CERTIFICATE`
 - **On-chain Decision String**: `UNSTABLE|NONE|UNSTABLE`
 - **Standalone `STABLE` matches on page (`/(?<!UN)STABLE/gi`)**: `0`
 - **Screenshot**: `docs/unstable_case_cbbed41fefc3.png`
 
-## 3. Captured Visible Text from Rendered Workbench (`/#/app?case=cbbed41fefc3`)
+## 3. Captured Visible Text from Live Production Workbench (`https://second-opinion-desk-genlayer.vercel.app/#/app?case=cbbed41fefc3`)
 ```text
 Second-Opinion Desk
 Bias-Cancelled On-Chain Adjudication

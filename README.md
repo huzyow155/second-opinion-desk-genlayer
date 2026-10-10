@@ -51,9 +51,11 @@ Reviewers can inspect these verified, immutable cases on GenLayer Studionet (Pre
 | **Demo A** | `0551168cd4f5` | Software Milestone | `DECIDED\|PARTY_1\|STABLE` | Clear-cut deliverable with git commit history and counterparty admission. |
 | **Demo B** | `4e4a3aa372e6` | Commercial Lease | `INSUFFICIENT\|NONE\|NA` | Missing required evidence dispute resolved deterministically without LLM bias. |
 | **Demo C** | `8f128188b6c6` | Infrastructure SLA | `DECIDED\|SPLIT\|STABLE` | Balanced SLA performance with mirrored consensus resulting in equal split. |
-| **Demo D** | `cbbed41fefc3` | Escrow Addendum | `UNSTABLE\|NONE\|UNSTABLE` | Ambiguous addendum attribution where canonical and mirrored passes diverge. |
+| **Demo D** | `cbbed41fefc3` | Escrow Addendum | `UNSTABLE\|NONE\|UNSTABLE` | Ambiguous addendum attribution where canonical and mirrored passes diverge. UNSTABLE means the canonical and mirrored passes disagreed, so no verdict is issued: the case stays OPEN (is_decided=false) and can be re-run or given more evidence. |
 
 ### On-Chain Verification of `UNSTABLE` Case (`cbbed41fefc3`)
+
+UNSTABLE means the canonical and mirrored passes disagreed, so no verdict is issued: the case stays OPEN (is_decided=false) and can be re-run or given more evidence.
 
 - **`open_case` Tx**: `0xa3e30f86e5677c7b069b3c42bd2769a6f90e27570cca39c24a2017151e4ff2aa`
 - **Party 1 `add_evidence` Tx**: `0x1edb1ec2e78ab87cb4396d5548df6426ea47615f36ac4249f73455c9355b3bae`

@@ -1,4 +1,3 @@
-import http from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -11,29 +10,8 @@ const hardTimer = setTimeout(() => {
 }, 90000);
 hardTimer.unref();
 
-const distDir = path.resolve('./dist');
 const docsDir = path.resolve('./docs');
 fs.mkdirSync(docsDir, { recursive: true });
-
-const mimeTypes = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.json': 'application/json',
-};
-
-const server = http.createServer((req, res) => {
-  const urlPath = (req.url || '/').split('?')[0];
-  let filePath = path.join(distDir, urlPath === '/' ? 'index.html' : urlPath);
-  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
-    filePath = path.join(distDir, 'index.html');
-  }
-  const ext = path.extname(filePath);
-  res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
-  fs.createReadStream(filePath).pipe(res);
-});
 
 async function launchHeadlessBrowser() {
   const candidates = [
@@ -159,9 +137,10 @@ async function launchHeadlessBrowser() {
   return { browser, page };
 }
 
-await new Promise((resolve) => server.listen(4179, '127.0.0.1', resolve));
-const targetUrl = 'http://127.0.0.1:4179/#/app?case=cbbed41fefc3';
-console.log('Serving production dist at:', targetUrl);
+const targetUrl =
+  process.env.TARGET_URL ||
+  'https://second-opinion-desk-genlayer.vercel.app/#/app?case=cbbed41fefc3';
+console.log('Opening remote production URL:', targetUrl);
 
 let browser;
 try {
@@ -207,6 +186,7 @@ try {
   const proofMarkdown = `# UI Verification Proof: On-Chain \`UNSTABLE\` Case (\`cbbed41fefc3\`)
 
 ## 1. On-Chain Case & RPC Coordinates
+- **Production URL**: \`${targetUrl}\`
 - **Contract Address**: \`0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D\`
 - **Case ID**: \`cbbed41fefc3\`
 - **Title**: \`Cross-Border Escrow & SLA Addendum Attribution Dispute\`
@@ -217,26 +197,25 @@ try {
 - **RPC View Call**: \`get_certificate("cbbed41fefc3")\`
 - **Field Read**: \`current_decision = "UNSTABLE|NONE|UNSTABLE"\`, \`rounds[0].decision = "UNSTABLE|NONE|UNSTABLE"\`
 
-## 2. Rendered DOM Assertions
+## 2. Rendered DOM Assertions (Live Production Site)
 - **Badge text**: \`${snapshot.badgeText}\`
 - **Certificate title**: \`${snapshot.certificateTitle}\`
 - **On-chain Decision String**: \`UNSTABLE|NONE|UNSTABLE\`
 - **Standalone \`STABLE\` matches on page (\`/(?<!UN)STABLE/gi\`)**: \`0\`
 - **Screenshot**: \`docs/unstable_case_cbbed41fefc3.png\`
 
-## 3. Captured Visible Text from Rendered Workbench (\`/#/app?case=cbbed41fefc3\`)
+## 3. Captured Visible Text from Live Production Workbench (\`${targetUrl}\`)
 \`\`\`text
 ${snapshot.bodyText.trim()}
 \`\`\`
 `;
 
   fs.writeFileSync(path.join(docsDir, 'UNSTABLE_CASE_UI_PROOF.md'), proofMarkdown, 'utf8');
-  console.log('SUCCESS: Wrote docs/UNSTABLE_CASE_UI_PROOF.md and docs/unstable_case_cbbed41fefc3.png');
+  console.log('SUCCESS: Verified live production URL and saved proof to docs/UNSTABLE_CASE_UI_PROOF.md');
 } finally {
   if (browser) {
     await browser.close();
   }
-  server.close();
   clearTimeout(hardTimer);
 }
 process.exit(0);
