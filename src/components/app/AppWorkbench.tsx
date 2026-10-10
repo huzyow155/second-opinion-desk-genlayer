@@ -14,6 +14,7 @@ import {
   executeFinalize,
   executeConsumerSettle,
   waitForReceiptWithProgress,
+  verifyPostWriteState,
   getWriteClient,
 } from '../../services/contractService';
 import {
@@ -22,6 +23,7 @@ import {
   STUDIONET_NAME,
 } from '../../config/chain';
 import type { CaseRecord, StabilityCertificate, Criterion } from '../../types/dispute';
+import { parseDecision } from '../../utils/decisionParser';
 import { WaitingStateModal } from '../common/WaitingStateModal';
 import {
   Scale,
@@ -65,6 +67,7 @@ export const AppWorkbench: React.FC = () => {
   const [consumerSettlement, setConsumerSettlement] = useState<string>('');
   const [loadingCase, setLoadingCase] = useState<boolean>(false);
   const [caseLoadError, setCaseLoadError] = useState<string | null>(null);
+  const [caseErrorType, setCaseErrorType] = useState<'not_found' | 'network' | null>(null);
 
   // Discovery lists
   const [recentGlobalCases, setRecentGlobalCases] = useState<string[]>([]);
@@ -112,29 +115,47 @@ export const AppWorkbench: React.FC = () => {
     const cleanId = caseId.trim().toLowerCase();
     setLoadingCase(true);
     setCaseLoadError(null);
+    setCaseErrorType(null);
 
     try {
-      const [cRecord, cert, cOutcome, cSettle] = await Promise.all([
+      const [cRecordRes, certRes, cOutcomeRes, cSettleRes] = await Promise.all([
         fetchCase(cleanId),
         fetchCertificate(cleanId),
         fetchOutcomeForConsumer(cleanId),
         fetchConsumerSettlement(cleanId),
       ]);
 
-      if (!cRecord && !cert) {
-        setCaseLoadError(`Case "${cleanId}" not found on Studionet.`);
+      // 1. Check for network / RPC transport failure
+      if (!cRecordRes.ok || !certRes.ok) {
+        const detail = (!cRecordRes.ok ? cRecordRes.error : '') || (!certRes.ok ? certRes.error : '') || 'RPC communication error';
+        setCaseLoadError(`Couldn't reach Studionet, try again (${detail})`);
+        setCaseErrorType('network');
         setCaseRecord(null);
         setCertificate(null);
-      } else {
-        setInspectedCaseId(cleanId);
-        setCaseRecord(cRecord);
-        setCertificate(cert);
-        setConsumerOutcome(cOutcome);
-        setConsumerSettlement(cSettle);
-        setEvidenceCaseId(cleanId);
+        return;
       }
+
+      // 2. Check for confirmed nonexistent case on-chain
+      if (cRecordRes.data === null && certRes.data === null) {
+        setCaseLoadError(`Case "${cleanId}" not found on Studionet.`);
+        setCaseErrorType('not_found');
+        setCaseRecord(null);
+        setCertificate(null);
+        return;
+      }
+
+      // 3. Successful read with on-chain data
+      setCaseLoadError(null);
+      setCaseErrorType(null);
+      setInspectedCaseId(cleanId);
+      setCaseRecord(cRecordRes.data);
+      setCertificate(certRes.data);
+      setConsumerOutcome(cOutcomeRes.ok && cOutcomeRes.data ? cOutcomeRes.data : 'NO_DECISION');
+      setConsumerSettlement(cSettleRes.ok && cSettleRes.data ? cSettleRes.data : '');
+      setEvidenceCaseId(cleanId);
     } catch (err: any) {
-      setCaseLoadError(err.message || 'Failed to fetch case data');
+      setCaseLoadError(`Couldn't reach Studionet, try again (${err.message || 'Network error'})`);
+      setCaseErrorType('network');
     } finally {
       setLoadingCase(false);
     }
@@ -149,7 +170,9 @@ export const AppWorkbench: React.FC = () => {
   // When account changes, refresh user's cases
   useEffect(() => {
     if (account) {
-      fetchCasesByParty(account, 10).then(setUserCases);
+      fetchCasesByParty(account, 10).then((res) => {
+        if (res.ok && res.data) setUserCases(res.data);
+      });
     } else {
       setUserCases([]);
     }
@@ -158,11 +181,15 @@ export const AppWorkbench: React.FC = () => {
   const refreshDiscoveryLists = async () => {
     setRefreshingList(true);
     try {
-      const globalIds = await fetchGlobalCases(0, 10);
-      setRecentGlobalCases(globalIds);
+      const globalRes = await fetchGlobalCases(0, 10);
+      if (globalRes.ok && globalRes.data) {
+        setRecentGlobalCases(globalRes.data);
+      }
       if (account) {
-        const partyIds = await fetchCasesByParty(account, 10);
-        setUserCases(partyIds);
+        const partyRes = await fetchCasesByParty(account, 10);
+        if (partyRes.ok && partyRes.data) {
+          setUserCases(partyRes.data);
+        }
       }
     } catch {
       // Ignored
@@ -220,6 +247,24 @@ export const AppWorkbench: React.FC = () => {
       return;
     }
 
+    if (criteria.length < 1 || criteria.length > 6) {
+      setOpenError('Number of criteria must be between 1 and 6.');
+      return;
+    }
+
+    for (let i = 0; i < criteria.length; i++) {
+      const c = criteria[i];
+      if (!c.text || !c.text.trim()) {
+        setOpenError(`Criterion #${i + 1} description cannot be empty.`);
+        return;
+      }
+      const w = Number(c.weight_bp);
+      if (!Number.isInteger(w) || typeof c.weight_bp === 'boolean' || w < 1 || w > 10000) {
+        setOpenError(`Criterion #${i + 1} weight must be an integer between 1 and 10,000 basis points.`);
+        return;
+      }
+    }
+
     if (totalCriteriaWeight !== 10000) {
       setOpenError(`Criteria weights must sum to 10,000 bp (currently ${totalCriteriaWeight}).`);
       return;
@@ -259,18 +304,27 @@ export const AppWorkbench: React.FC = () => {
       }
 
       // DISCOVERY VIEW LOOKUP (Rule #4: Never calculate hash locally)
-      const discoveredCaseId = await fetchLatestCaseForPair(account, opposingAddress.trim());
-
-      setOpenSuccessMsg(
-        `Case opened in ${durationSec}s! Discovered on-chain ID: ${discoveredCaseId}`
-      );
+      const pairRes = await fetchLatestCaseForPair(account, opposingAddress.trim());
+      const discoveredCaseId = pairRes.ok && pairRes.data ? pairRes.data : null;
 
       if (discoveredCaseId) {
+        const verifyRes = await verifyPostWriteState('open', discoveredCaseId, { title: openTitle.trim() });
+        if (!verifyRes.verified) {
+          throw new Error(`Write transaction succeeded, but post-write state verification failed: ${verifyRes.message}`);
+        }
+
+        setOpenSuccessMsg(
+          `Case opened in ${durationSec}s! Discovered on-chain ID: ${discoveredCaseId}`
+        );
+
         setInspectedCaseId(discoveredCaseId);
         setEvidenceCaseId(discoveredCaseId);
         await loadCaseData(discoveredCaseId);
         refreshDiscoveryLists();
         setActiveTab('evidence');
+      } else {
+        setOpenSuccessMsg(`Case opened in ${durationSec}s! Refreshing list...`);
+        refreshDiscoveryLists();
       }
     } catch (err: any) {
       setWaitingModalOpen(false);
@@ -329,6 +383,11 @@ export const AppWorkbench: React.FC = () => {
         throw new Error(`Evidence submission failed with status ${receipt?.status_name || 'UNKNOWN'}`);
       }
 
+      const verifyRes = await verifyPostWriteState('evidence', evidenceCaseId.trim());
+      if (!verifyRes.verified) {
+        throw new Error(`Evidence transaction succeeded, but post-write state verification failed: ${verifyRes.message}`);
+      }
+
       setEvidenceSuccessMsg(`Evidence accepted by validators in ${durationSec}s.`);
       setEvidenceText('');
       await loadCaseData(evidenceCaseId.trim());
@@ -371,6 +430,11 @@ export const AppWorkbench: React.FC = () => {
 
       if (!success) {
         throw new Error(`Judge execution failed with status ${receipt?.status_name || 'UNKNOWN'}`);
+      }
+
+      const verifyRes = await verifyPostWriteState('judge', caseId);
+      if (!verifyRes.verified) {
+        throw new Error(`Judge transaction succeeded, but post-write state verification failed: ${verifyRes.message}`);
       }
 
       setActionSuccessMsg(
@@ -418,6 +482,11 @@ export const AppWorkbench: React.FC = () => {
         throw new Error(`Finalize failed with status ${receipt?.status_name || 'UNKNOWN'}`);
       }
 
+      const verifyRes = await verifyPostWriteState('finalize', caseId);
+      if (!verifyRes.verified) {
+        throw new Error(`Finalize transaction succeeded, but post-write state verification failed: ${verifyRes.message}`);
+      }
+
       setActionSuccessMsg(`Case closed and marked FINAL in ${durationSec}s.`);
       await loadCaseData(caseId);
     } catch (err: any) {
@@ -461,6 +530,11 @@ export const AppWorkbench: React.FC = () => {
         throw new Error(`Consumer settlement failed with status ${receipt?.status_name || 'UNKNOWN'}`);
       }
 
+      const verifyRes = await verifyPostWriteState('settle', caseId);
+      if (!verifyRes.verified) {
+        throw new Error(`Consumer settlement transaction succeeded, but post-write state verification failed: ${verifyRes.message}`);
+      }
+
       setActionSuccessMsg(`Consumer settlement completed in ${durationSec}s!`);
       await loadCaseData(caseId);
     } catch (err: any) {
@@ -471,35 +545,20 @@ export const AppWorkbench: React.FC = () => {
 
   // Plain language stability explanation
   const getStabilityExplanation = (decision: string) => {
-    if (!decision) return 'Awaiting initial dual-pass mirrored adjudication.';
-    if (decision.includes('STABLE') && decision.includes('PARTY_1')) {
-      return 'Both evaluation passes favored Party 1 within the configured 15% tolerance.';
-    }
-    if (decision.includes('STABLE') && decision.includes('PARTY_2')) {
-      return 'Both evaluation passes favored Party 2 within the configured 15% tolerance.';
-    }
-    if (decision.includes('SPLIT')) {
-      return 'Both parties fulfilled reciprocal obligations, landing within the margin threshold.';
-    }
-    if (decision.includes('UNSTABLE')) {
-      return 'The mirrored evaluation changed the outcome enough to require another round or additional evidence.';
-    }
-    if (decision.includes('INSUFFICIENT')) {
-      return 'One or both parties do not yet have enough submitted evidence for adjudication.';
-    }
-    return 'Adjudication completed.';
+    return parseDecision(decision).explanation;
   };
 
   const renderStabilityBadge = (decision: string) => {
-    if (!decision) {
+    const parsed = parseDecision(decision);
+    if (parsed.badgeType === 'pending') {
       return (
         <span className="silver-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium">
           <Clock className="w-3.5 h-3.5 text-[#6c727d]" />
-          <span>Pending Evaluation</span>
+          <span>{parsed.label}</span>
         </span>
       );
     }
-    if (decision.includes('STABLE')) {
+    if (parsed.badgeType === 'stable') {
       return (
         <span className="status-badge-stable inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold motion-badge">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -507,7 +566,7 @@ export const AppWorkbench: React.FC = () => {
         </span>
       );
     }
-    if (decision.includes('UNSTABLE')) {
+    if (parsed.badgeType === 'unstable') {
       return (
         <span className="status-badge-unstable inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold motion-badge">
           <AlertTriangle className="w-4 h-4 text-rose-400" />
@@ -515,7 +574,7 @@ export const AppWorkbench: React.FC = () => {
         </span>
       );
     }
-    if (decision.includes('INSUFFICIENT')) {
+    if (parsed.badgeType === 'insufficient') {
       return (
         <span className="status-badge-insufficient inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold motion-badge">
           <Info className="w-4 h-4 text-blue-400" />
@@ -523,7 +582,7 @@ export const AppWorkbench: React.FC = () => {
         </span>
       );
     }
-    if (decision.includes('SPLIT')) {
+    if (parsed.badgeType === 'split') {
       return (
         <span className="status-badge-split inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold motion-badge">
           <Scale className="w-4 h-4 text-amber-400" />
@@ -533,7 +592,7 @@ export const AppWorkbench: React.FC = () => {
     }
     return (
       <span className="silver-pill inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium motion-badge">
-        {decision}
+        {parsed.label}
       </span>
     );
   };
@@ -1133,9 +1192,19 @@ export const AppWorkbench: React.FC = () => {
 
               {/* Error indicator */}
               {caseLoadError && (
-                <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2 reveal-up">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
-                  <span>{caseLoadError}</span>
+                <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-300 flex items-start justify-between gap-3 reveal-up">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+                    <span>{caseLoadError}</span>
+                  </div>
+                  {caseErrorType === 'network' && (
+                    <button
+                      onClick={() => loadCaseData(inspectedCaseId)}
+                      className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg text-amber-200 font-semibold cursor-pointer shrink-0 text-xs"
+                    >
+                      Retry
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -1150,15 +1219,7 @@ export const AppWorkbench: React.FC = () => {
 
                 <div className="space-y-1">
                   <div className="text-xl sm:text-2xl font-extrabold text-[#eef0f2] tracking-tight verdict-stage-1">
-                    {activeDecision.includes('STABLE')
-                      ? 'STABLE CERTIFICATE'
-                      : activeDecision.includes('UNSTABLE')
-                      ? 'UNSTABLE CERTIFICATE'
-                      : activeDecision.includes('INSUFFICIENT')
-                      ? 'INSUFFICIENT EVIDENCE'
-                      : activeDecision.includes('SPLIT')
-                      ? 'SPLIT DETERMINATION'
-                      : 'STATUS PENDING'}
+                    {parseDecision(activeDecision).certificateTitle}
                   </div>
                   <div className="text-sm sm:text-base font-medium text-stone-300 verdict-stage-2">
                     {getStabilityExplanation(activeDecision)}

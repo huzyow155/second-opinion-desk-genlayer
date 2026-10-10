@@ -1,7 +1,7 @@
 import { createClient, chains, createAccount } from 'genlayer-js';
 import fs from 'fs';
 
-const MIRROR_JUDGE_ADDRESS = '0x3991d0817f8FD6B6632b1C2c21d234598CbF4e17';
+const MIRROR_JUDGE_ADDRESS = '0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D';
 const RPC_URL = 'https://studio.genlayer.com/api';
 
 const studionet = chains?.studionet || {
@@ -13,27 +13,45 @@ const studionet = chains?.studionet || {
 async function waitForStrictReceipt(client, txHash, label) {
   const start = Date.now();
   console.log(`Waiting for receipt of ${label} (${txHash})...`);
-  const receipt = await client.waitForTransactionReceipt({
-    hash: txHash,
-    retries: 150,
-    interval: 3000,
-  });
-  const elapsedSec = ((Date.now() - start) / 1000).toFixed(2);
-
-  const statusName = receipt?.status_name;
-  const leaderReceipt = receipt?.consensus_data?.leader_receipt?.[0];
-  const executionResult = leaderReceipt?.execution_result || receipt?.result_name;
-
-  console.log(`[${label}] Status: ${statusName}, Leader Execution: ${executionResult}, Elapsed: ${elapsedSec}s`);
-
-  if (statusName !== 'ACCEPTED') {
-    throw new Error(`[${label}] Failed: status_name is ${statusName}, expected ACCEPTED`);
+  for (let attempt = 0; attempt < 150; attempt++) {
+    try {
+      const res = await fetch(RPC_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: attempt + 1,
+          method: "eth_getTransactionByHash",
+          params: [txHash],
+        }),
+      });
+      const text = await res.text();
+      if (text.startsWith("{")) {
+        const json = JSON.parse(text);
+        const receipt = json.result;
+        if (receipt && (receipt.status === "FINALIZED" || receipt.status_name === "ACCEPTED" || receipt.status === 2 || receipt.status === "ACCEPTED")) {
+          const elapsedSec = ((Date.now() - start) / 1000).toFixed(2);
+          const statusName = receipt.status_name || (receipt.status === "FINALIZED" ? "ACCEPTED" : String(receipt.status));
+          const leaderReceipt = receipt.consensus_data?.leader_receipt?.[0];
+          const executionResult = leaderReceipt?.execution_result || receipt.result_name || "UNKNOWN";
+          console.log(`[${label}] Status: ${statusName}, Leader Execution: ${executionResult}, Elapsed: ${elapsedSec}s`);
+          if (statusName !== 'ACCEPTED') {
+            throw new Error(`[${label}] Failed: status_name is ${statusName}, expected ACCEPTED`);
+          }
+          if (executionResult !== 'SUCCESS') {
+            throw new Error(`[${label}] Failed: execution_result is ${executionResult}, expected SUCCESS`);
+          }
+          return { receipt, elapsedSec, statusName, executionResult };
+        }
+      }
+    } catch (err) {
+      if (err.message.includes('expected ACCEPTED') || err.message.includes('expected SUCCESS')) {
+        throw err;
+      }
+    }
+    await new Promise((r) => setTimeout(r, 3000));
   }
-  if (executionResult !== 'SUCCESS') {
-    throw new Error(`[${label}] Failed: execution_result is ${executionResult}, expected SUCCESS`);
-  }
-
-  return { receipt, elapsedSec, statusName, executionResult };
+  throw new Error(`Timed out waiting for receipt of ${label}: ${txHash}`);
 }
 
 async function main() {

@@ -1,66 +1,185 @@
 {
-  "caseId": "b2e5106f950e",
-  "title": "E2E Milestone Acceptance Verification 8897",
-  "party1": "0x2305a48348e09567264d1b055e41C0531cF8944C",
-  "party2": "0x7e5747A1acCC8A42848d1e3Cd9dEA4245d99c49A",
-  "openTx": {
-    "hash": "0xcfee413d0d6ebaa79dbf05d4b1b71eab76a6becd21a73ef0fb7267d969d74e02",
-    "status": "ACCEPTED",
-    "leaderExecution": "SUCCESS",
-    "elapsedSec": "7.24"
+  "network": "studionet",
+  "chainId": 61999,
+  "rpcUrl": "https://studio.genlayer.com/api",
+  "explorerBaseUrl": "https://explorer-studio.genlayer.com/address/",
+  "contractAddress": "0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D",
+  "deployTxHash": "0xf32d2573b81b086b226658434d04e2eca4103e9610ea98f4a38f54fd769edbc3",
+  "deployDurationSec": "6.79",
+  "consumerContractAddress": "0x4FC86C019ec00Aa911A4D34986e33be2Cd94b837",
+  "consumerDeployTxHash": "0xd74c65db6cc9256cc6f1221e5003c979c7e11e19dc4a919cc80498f454d302f1",
+  "localJudgeSha256": "123c0dbe36a376213d20c2e42bda22f82f51be184a42295d98fe36e882ae0594",
+  "deployedCodeSha256": "123c0dbe36a376213d20c2e42bda22f82f51be184a42295d98fe36e882ae0594",
+  "sourceMatches": true,
+  "invalidWeightRejectionTest": {
+    "passed": true,
+    "txHash": "0xf0432b2b1962aa023200e1c78cbcc2ecef7ea11d138b5e035b1e5cc7df894d46",
+    "executionResult": "ERROR"
   },
-  "ev1Tx": {
-    "hash": "0x96c0e2f3972de739ec88a55e48e5cc43af02ad6205d4d9e7565cf7cde7decee0",
-    "status": "ACCEPTED",
-    "leaderExecution": "SUCCESS",
-    "elapsedSec": "3.67"
-  },
-  "ev2Tx": {
-    "hash": "0xf33a7d99f285dcef536e21a62ccd112da0371748c268788281294a897211e4ea",
-    "status": "ACCEPTED",
-    "leaderExecution": "SUCCESS",
-    "elapsedSec": "3.66"
-  },
-  "judgeTx": {
-    "hash": "0x6dbbbb245bdd21a3d82e78beb449e3ad168df36df41ed1792dd0bebec0b182ab",
-    "status": "ACCEPTED",
-    "leaderExecution": "SUCCESS",
-    "latencySec": "55.56"
-  },
-  "totalDurationSec": "79.45",
-  "certificate": {
-    "schema_version": "1.0",
-    "case_id": "b2e5106f950e",
-    "title": "E2E Milestone Acceptance Verification 8897",
-    "opener": "0x2305a48348e09567264d1b055e41C0531cF8944C",
-    "opposing": "0x7e5747A1acCC8A42848d1e3Cd9dEA4245d99c49A",
-    "status": "JUDGED",
-    "config": {
-      "margin_bp": 1500,
-      "max_flips": 1,
-      "max_rounds": 3,
-      "criteria": [
+  "caseA": {
+    "caseId": "0551168cd4f5",
+    "openTx": "0xa566b8c02f3450e261a4bab8e8b786645ce2f26235c668c7f83dbe25e11a14e7",
+    "ev1Tx": "0xd1607b7efab4dc48cf1adda5cf1e75d767335591f208673b996c888984bf6866",
+    "ev2Tx": "0xa3217321d35a905842dba86c2aa7865d29c001965947261eadab7b08069ed47e",
+    "judgeTx": "0x6fea6f4ae90aeec35bab0ecf53ca0228bbb846b85f889ca9030c82d6915a04f4",
+    "judgeLatencySec": "31.73",
+    "receiptStatus": "ACCEPTED",
+    "receiptResult": "MAJORITY_AGREE",
+    "leaderResult": "SUCCESS",
+    "certificate": {
+      "schema_version": "1.0",
+      "case_id": "0551168cd4f5",
+      "title": "Freelance Milestone 1 Delivery Verification",
+      "opener": "0xBe05c5CBeAd918924AEB9Ec4F327A823d8378f34",
+      "opposing": "0xF14a9365Fa5F9Ab0393BFBf1C75EC62ab68d11C2",
+      "status": "JUDGED",
+      "config": {
+        "margin_bp": 1500,
+        "max_flips": 1,
+        "max_rounds": 3,
+        "criteria": [
+          {
+            "id": "milestone_delivery",
+            "text": "Which party substantiated full completion of milestone deliverables: PARTY_1 or PARTY_2?",
+            "weight_bp": 6000
+          },
+          {
+            "id": "spec_compliance",
+            "text": "Which party adhered to specifications and code standards: PARTY_1 or PARTY_2?",
+            "weight_bp": 4000
+          }
+        ]
+      },
+      "rounds": [
         {
-          "id": "milestone_deliverable",
-          "text": "Which party substantiated full delivery of agreed software milestone deliverables: PARTY_1 or PARTY_2?",
-          "weight_bp": 6000
-        },
-        {
-          "id": "spec_compliance",
-          "text": "Which party adhered to technical specifications and contract requirements: PARTY_1 or PARTY_2?",
-          "weight_bp": 4000
+          "n": 1,
+          "decision": "DECIDED|PARTY_1|STABLE"
         }
-      ]
+      ],
+      "current_decision": "DECIDED|PARTY_1|STABLE",
+      "is_decided": true,
+      "outcome": "PARTY_1"
     },
-    "rounds": [
-      {
-        "n": 1,
-        "decision": "DECIDED|PARTY_1|STABLE"
-      }
-    ],
-    "current_decision": "DECIDED|PARTY_1|STABLE",
-    "is_decided": true,
-    "outcome": "PARTY_1"
+    "consumerSettleTx": "0xe7eff1f77233abad21b16d1acd26f267a0c9bc56b0cf052cc645e0830c6b1701",
+    "settledResult": "SETTLED_PARTY_1"
   },
-  "consumerOutcome": "PARTY_1"
+  "caseB": {
+    "caseId": "4e4a3aa372e6",
+    "openTx": "0x42a228ee8e78df027b573de462092dccddf2b312859174f22a99784761f3e32d",
+    "ev1Tx": "0xb1f4fd6dde816122dd0f757faf57cde310767a97d5fb854705602d8b78d945d1",
+    "judgeTx": "0xf06e7bd5c09a6dd5b037afd85795b32a15beab373f590c454d5c23212c176126",
+    "judgeLatencySec": "5.25",
+    "receiptStatus": "ACCEPTED",
+    "receiptResult": "MAJORITY_AGREE",
+    "leaderResult": "SUCCESS",
+    "certificate": {
+      "schema_version": "1.0",
+      "case_id": "4e4a3aa372e6",
+      "title": "Commercial Lease Cleaning Deposit Dispute",
+      "opener": "0xBe05c5CBeAd918924AEB9Ec4F327A823d8378f34",
+      "opposing": "0xF14a9365Fa5F9Ab0393BFBf1C75EC62ab68d11C2",
+      "status": "OPEN",
+      "config": {
+        "margin_bp": 1500,
+        "max_flips": 1,
+        "max_rounds": 3,
+        "criteria": [
+          {
+            "id": "premises_restoration",
+            "text": "Which party substantiated proper restoration and professional cleaning of premises: PARTY_1 or PARTY_2?",
+            "weight_bp": 10000
+          }
+        ]
+      },
+      "rounds": [
+        {
+          "n": 1,
+          "decision": "INSUFFICIENT|NONE|NA"
+        }
+      ],
+      "current_decision": "INSUFFICIENT|NONE|NA",
+      "is_decided": false,
+      "outcome": "PENDING"
+    }
+  },
+  "caseC": {
+    "caseId": "8f128188b6c6",
+    "openTx": "0xe1ac4ce2f9fbacb728235b5937408710bbbce40c890de31b01cc478c68f0b066",
+    "round1": {
+      "ev1Tx": "0x60d21c342631a712607dc93a722a9ee34bd35a8486c4547d7e8a11bc7d819dd5",
+      "ev2Tx": "0x2c1479e41ea6ffa8c07d61b8fa1f31738bb3f9531475eecf1c5c8b31cfce158a",
+      "judgeTx": "0x6fbf8d9edcbf523a4c4b27d8148608408a108949f10e2ffc3ac09221f0768580",
+      "judgeLatencySec": "28.48",
+      "receiptStatus": "ACCEPTED",
+      "receiptResult": "MAJORITY_AGREE",
+      "leaderResult": "SUCCESS",
+      "certificate": {
+        "schema_version": "1.0",
+        "case_id": "8f128188b6c6",
+        "title": "API Gateway Infrastructure SLA Milestone Dispute",
+        "opener": "0xBe05c5CBeAd918924AEB9Ec4F327A823d8378f34",
+        "opposing": "0xF14a9365Fa5F9Ab0393BFBf1C75EC62ab68d11C2",
+        "status": "JUDGED",
+        "config": {
+          "margin_bp": 1500,
+          "max_flips": 1,
+          "max_rounds": 3,
+          "criteria": [
+            {
+              "id": "sla_maintenance",
+              "text": "Which party substantiated superior system uptime and SLA maintenance: PARTY_1 or PARTY_2?",
+              "weight_bp": 10000
+            }
+          ]
+        },
+        "rounds": [
+          {
+            "n": 1,
+            "decision": "DECIDED|SPLIT|STABLE"
+          }
+        ],
+        "current_decision": "DECIDED|SPLIT|STABLE",
+        "is_decided": true,
+        "outcome": "SPLIT"
+      }
+    },
+    "round2": {
+      "ev3Tx": "0x60949d0c82bbb32f5ab42a61636f1afa33613affe0d70c24ed33803f077d9b01",
+      "ev4Tx": "0x7a37ca01b08a92d201758d93fc36b0d1df226594cc1ad6b900948d4a59be99ce",
+      "judgeTx": "0x8b66f9ea6e5940dac85d16b6235ac74802bc5b5da71dc9d3a1e7dfbdfa06b837",
+      "judgeLatencySec": "5.34",
+      "receiptStatus": "ACCEPTED",
+      "receiptResult": "MAJORITY_AGREE",
+      "leaderResult": "ERROR",
+      "certificate": {
+        "schema_version": "1.0",
+        "case_id": "8f128188b6c6",
+        "title": "API Gateway Infrastructure SLA Milestone Dispute",
+        "opener": "0xBe05c5CBeAd918924AEB9Ec4F327A823d8378f34",
+        "opposing": "0xF14a9365Fa5F9Ab0393BFBf1C75EC62ab68d11C2",
+        "status": "JUDGED",
+        "config": {
+          "margin_bp": 1500,
+          "max_flips": 1,
+          "max_rounds": 3,
+          "criteria": [
+            {
+              "id": "sla_maintenance",
+              "text": "Which party substantiated superior system uptime and SLA maintenance: PARTY_1 or PARTY_2?",
+              "weight_bp": 10000
+            }
+          ]
+        },
+        "rounds": [
+          {
+            "n": 1,
+            "decision": "DECIDED|SPLIT|STABLE"
+          }
+        ],
+        "current_decision": "DECIDED|SPLIT|STABLE",
+        "is_decided": true,
+        "outcome": "SPLIT"
+      }
+    }
+  }
 }

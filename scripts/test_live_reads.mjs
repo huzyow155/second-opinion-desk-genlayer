@@ -2,9 +2,9 @@ import { createClient, chains } from 'genlayer-js';
 import fs from 'fs';
 import crypto from 'crypto';
 
-const MIRROR_JUDGE_ADDRESS = '0x3991d0817f8FD6B6632b1C2c21d234598CbF4e17';
-const CONSUMER_CONTRACT_ADDRESS = '0x294FFDec366826F8682CFAAEbaf25DcAeBda9317';
-const DEPLOY_TX_HASH = '0x8e6a7c865bd92a00c1c518325347d164842467e881079cbff68958cda1e474bd';
+const MIRROR_JUDGE_ADDRESS = '0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D';
+const CONSUMER_CONTRACT_ADDRESS = '0x4FC86C019ec00Aa911A4D34986e33be2Cd94b837';
+const DEPLOY_TX_HASH = '0xf32d2573b81b086b226658434d04e2eca4103e9610ea98f4a38f54fd769edbc3';
 const RPC_URL = 'https://studio.genlayer.com/api';
 
 const studionet = chains?.studionet || {
@@ -19,16 +19,16 @@ async function run() {
   console.log('=== GATE 1 & 2: ON-CHAIN READS ON STUDIONET ===');
 
   // Test Demo A
-  console.log('\n[1] Testing Demo A (99f9b7444e2a)...');
+  console.log('\n[1] Testing Demo A (0551168cd4f5)...');
   const demoARaw = await client.readContract({
     address: MIRROR_JUDGE_ADDRESS,
     functionName: 'get_case',
-    args: ['99f9b7444e2a'],
+    args: ['0551168cd4f5'],
   });
   const demoACertRaw = await client.readContract({
     address: MIRROR_JUDGE_ADDRESS,
     functionName: 'get_certificate',
-    args: ['99f9b7444e2a'],
+    args: ['0551168cd4f5'],
   });
   const demoACert = typeof demoACertRaw === 'string' ? JSON.parse(demoACertRaw) : demoACertRaw;
   console.log('Demo A Title:', typeof demoARaw === 'string' ? JSON.parse(demoARaw).title : demoARaw.title);
@@ -36,37 +36,26 @@ async function run() {
   console.log('Demo A Decided?:', demoACert.is_decided);
 
   // Test Demo B
-  console.log('\n[2] Testing Demo B (affb287df9cb)...');
+  console.log('\n[2] Testing Demo B (4e4a3aa372e6)...');
   const demoBCertRaw = await client.readContract({
     address: MIRROR_JUDGE_ADDRESS,
     functionName: 'get_certificate',
-    args: ['affb287df9cb'],
+    args: ['4e4a3aa372e6'],
   });
   const demoBCert = typeof demoBCertRaw === 'string' ? JSON.parse(demoBCertRaw) : demoBCertRaw;
   console.log('Demo B Decision:', demoBCert.current_decision);
   console.log('Demo B Decided?:', demoBCert.is_decided);
 
   // Test Demo C
-  console.log('\n[3] Testing Demo C (bf29f5d7c7fd)...');
+  console.log('\n[3] Testing Demo C (8f128188b6c6)...');
   const demoCCertRaw = await client.readContract({
     address: MIRROR_JUDGE_ADDRESS,
     functionName: 'get_certificate',
-    args: ['bf29f5d7c7fd'],
+    args: ['8f128188b6c6'],
   });
   const demoCCert = typeof demoCCertRaw === 'string' ? JSON.parse(demoCCertRaw) : demoCCertRaw;
   console.log('Demo C Decision:', demoCCert.current_decision);
   console.log('Demo C Decided?:', demoCCert.is_decided);
-
-  // Test Contradictory Proof Case
-  console.log('\n[3b] Testing Contradictory Hardening Case (74320c3924e2)...');
-  const demoEscCertRaw = await client.readContract({
-    address: MIRROR_JUDGE_ADDRESS,
-    functionName: 'get_certificate',
-    args: ['74320c3924e2'],
-  });
-  const demoEscCert = typeof demoEscCertRaw === 'string' ? JSON.parse(demoEscCertRaw) : demoEscCertRaw;
-  console.log('Contradictory Case Decision:', demoEscCert.current_decision);
-  console.log('Contradictory Case Rounds Count:', demoEscCert.rounds.length);
 
   // Test Negative Lookup (Gate 2 Negative Check)
   console.log('\n[4] Testing Negative Case Lookup (nonexistent99)...');
@@ -95,14 +84,14 @@ async function run() {
   const outcomeA = await client.readContract({
     address: MIRROR_JUDGE_ADDRESS,
     functionName: 'outcome_for_consumer',
-    args: ['99f9b7444e2a'],
+    args: ['0551168cd4f5'],
   });
   console.log('Demo A outcome_for_consumer:', outcomeA);
 
   const settleA = await client.readContract({
     address: CONSUMER_CONTRACT_ADDRESS,
     functionName: 'get_settlement',
-    args: ['99f9b7444e2a'],
+    args: ['0551168cd4f5'],
   });
   console.log('Demo A Consumer get_settlement:', settleA);
 
