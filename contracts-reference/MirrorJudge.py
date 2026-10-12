@@ -4,13 +4,47 @@
 import json
 from genlayer import *
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "2.0.0"
 P1, P2 = "PARTY_1", "PARTY_2"
+
+# Evidence submission window duration in seconds (10 minutes).
+# Both parties may submit evidence and mark ready during this window.
+EVIDENCE_WINDOW_SECONDS = 600
+
+# Review window in seconds (5 minutes) after a JUDGED round before a single
+# acknowledging party can close the case to FINAL if the counterparty is silent.
+FINALIZE_WINDOW_SECONDS = 300
 
 
 def _sha(text: str) -> str:
     import hashlib
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _parse_iso8601_utc(dt_str) -> int:
+    """Strictly parse ISO-8601 UTC datetime string into integer unix seconds."""
+    import re
+    from datetime import datetime
+
+    if not isinstance(dt_str, str):
+        raise gl.vm.UserError("clock unavailable")
+    clean_dt = dt_str.strip()
+    if not re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|\+00:00)$", clean_dt):
+        raise gl.vm.UserError("clock unavailable")
+    try:
+        ts = datetime.fromisoformat(clean_dt.replace("Z", "+00:00")).timestamp()
+        return int(ts)
+    except Exception:
+        raise gl.vm.UserError("clock unavailable")
+
+
+def _now_ts() -> int:
+    """Read deterministic execution timestamp from gl.message_raw['datetime']."""
+    if hasattr(gl, "message_raw") and isinstance(gl.message_raw, dict):
+        raw_dt = gl.message_raw.get("datetime")
+        if raw_dt is not None:
+            return _parse_iso8601_utc(raw_dt)
+    raise gl.vm.UserError("clock unavailable")
 
 
 def _flat(s: str) -> str:
@@ -189,6 +223,32 @@ def _parse_aliases(csv_str: str) -> list[str]:
     return res
 
 
+def _compute_outcome_pure(case: dict) -> str:
+    """
+    Outcome gating rules:
+    - Winner (PARTY_1, PARTY_2, SPLIT) is returned ONLY when status == FINAL and last round is DECIDED.
+    - NO_DECISION is returned ONLY when status == FINAL and there is no DECIDED last round.
+    - In every other state return PENDING.
+    """
+    status = case.get("status", "OPEN")
+    if status != "FINAL":
+        return "PENDING"
+
+    rounds = case.get("rounds", [])
+    if not rounds:
+        return "NO_DECISION"
+
+    last_decision = rounds[-1].get("decision", "")
+    if last_decision.startswith("DECIDED|"):
+        parts = last_decision.split("|")
+        winner = parts[1] if len(parts) > 1 else ""
+        if winner in (P1, P2, "SPLIT"):
+            return winner
+        return "NO_DECISION"
+
+    return "NO_DECISION"
+
+
 class MirrorJudge(gl.Contract):
     cases: TreeMap[str, str]
     party_cases: TreeMap[str, str]
@@ -197,6 +257,14 @@ class MirrorJudge(gl.Contract):
 
     def __init__(self):
         pass
+
+    def _resolve_party(self, case: dict, sender: str, err_msg: str) -> str:
+        low = sender.lower()
+        if low == case["opener"].lower():
+            return P1
+        if low == case["opposing"].lower():
+            return P2
+        raise gl.vm.UserError(err_msg)
 
     @gl.public.write
     def open_case(
@@ -228,6 +296,8 @@ class MirrorJudge(gl.Contract):
         if opener.lower() == opp_addr.lower():
             raise gl.vm.UserError("opener cannot be opposing party")
 
+        now = _now_ts()
+
         case_id = _sha(opener + "|" + title + "|" + criteria_json)[:12]
         if case_id in self.cases:
             raise gl.vm.UserError("case already exists")
@@ -247,6 +317,12 @@ class MirrorJudge(gl.Contract):
             "evidence": [],
             "rounds": [],
             "status": "OPEN",
+            "opened_at_ts": now,
+            "evidence_deadline_ts": now + EVIDENCE_WINDOW_SECONDS,
+            "ready": {P1: False, P2: False},
+            "closed_at_ts": 0,
+            "judged_at_ts": 0,
+            "final_acks": {P1: False, P2: False},
         }
         self.cases[case_id] = json.dumps(case_record)
 
@@ -286,17 +362,19 @@ class MirrorJudge(gl.Contract):
             raise gl.vm.UserError("case not found")
         case = json.loads(self.cases[case_id])
         if case["status"] == "FINAL":
-            raise gl.vm.UserError("case is finalized")
-        if case["rounds"] and case["rounds"][-1]["decision"].startswith("DECIDED|"):
-            raise gl.vm.UserError("case already decided")
+            raise gl.vm.UserError("case is closed")
+        if case["status"] != "OPEN":
+            raise gl.vm.UserError("evidence phase is not open")
 
         sender = gl.message.sender_address.as_hex
-        if sender.lower() == case["opener"].lower():
-            by = P1
-        elif sender.lower() == case["opposing"].lower():
-            by = P2
-        else:
-            raise gl.vm.UserError("not a party to the case")
+        by = self._resolve_party(case, sender, "not a party to the case")
+
+        if case["ready"].get(by, False):
+            raise gl.vm.UserError("party already marked ready")
+
+        now = _now_ts()
+        if now >= case["evidence_deadline_ts"]:
+            raise gl.vm.UserError("evidence window has closed")
 
         if not (1 <= len(text) <= 1200):
             raise gl.vm.UserError("evidence text must be 1..1200 chars")
@@ -309,17 +387,74 @@ class MirrorJudge(gl.Contract):
         self.cases[case_id] = json.dumps(case)
 
     @gl.public.write
+    def mark_ready(self, case_id: str) -> str:
+        if case_id not in self.cases:
+            raise gl.vm.UserError("case not found")
+        case = json.loads(self.cases[case_id])
+        if case["status"] == "FINAL":
+            raise gl.vm.UserError("case is closed")
+
+        sender = gl.message.sender_address.as_hex
+        by = self._resolve_party(case, sender, "not a party to the case")
+
+        if case["status"] != "OPEN":
+            raise gl.vm.UserError("evidence phase is not open")
+        if case["ready"].get(by, False):
+            raise gl.vm.UserError("already marked ready")
+
+        has_ev = any(e["by"] == by for e in case["evidence"])
+        if not has_ev:
+            raise gl.vm.UserError("submit evidence before marking ready")
+
+        now = _now_ts()
+        case["ready"][by] = True
+        if case["ready"].get(P1, False) and case["ready"].get(P2, False):
+            case["status"] = "CLOSED"
+            case["closed_at_ts"] = now
+
+        self.cases[case_id] = json.dumps(case)
+        return case["status"]
+
+    @gl.public.write
+    def close_evidence(self, case_id: str) -> str:
+        if case_id not in self.cases:
+            raise gl.vm.UserError("case not found")
+        case = json.loads(self.cases[case_id])
+        if case["status"] == "FINAL":
+            raise gl.vm.UserError("case is closed")
+
+        sender = gl.message.sender_address.as_hex
+        self._resolve_party(case, sender, "not a party to the case")
+
+        if case["status"] != "OPEN":
+            raise gl.vm.UserError("evidence phase is not open")
+
+        now = _now_ts()
+        if now < case["evidence_deadline_ts"]:
+            raise gl.vm.UserError("evidence window still open")
+
+        case["status"] = "CLOSED"
+        case["closed_at_ts"] = now
+        self.cases[case_id] = json.dumps(case)
+        return case["status"]
+
+    @gl.public.write
     def judge(self, case_id: str) -> str:
         if case_id not in self.cases:
             raise gl.vm.UserError("case not found")
         case = json.loads(self.cases[case_id])
         if case["status"] == "FINAL":
-            raise gl.vm.UserError("case is finalized")
-        if case["rounds"] and case["rounds"][-1]["decision"].startswith("DECIDED|"):
-            raise gl.vm.UserError("case already decided")
+            raise gl.vm.UserError("case is closed")
+
+        sender = gl.message.sender_address.as_hex
+        self._resolve_party(case, sender, "only a party can trigger judging")
+
+        if case["status"] != "CLOSED":
+            raise gl.vm.UserError("evidence is not closed")
         if len(case["rounds"]) >= case["max_rounds"]:
             raise gl.vm.UserError("rounds exhausted")
 
+        now = _now_ts()
         has_p1 = any(e["by"] == P1 for e in case["evidence"])
         has_p2 = any(e["by"] == P2 for e in case["evidence"])
         n = len(case["rounds"]) + 1
@@ -327,6 +462,8 @@ class MirrorJudge(gl.Contract):
         if not has_p1 or not has_p2:
             decision = "INSUFFICIENT|NONE|NA"
             case["rounds"].append({"n": n, "decision": decision})
+            case["status"] = "FINAL"
+            case["judged_at_ts"] = now
             self.cases[case_id] = json.dumps(case)
             return decision
 
@@ -346,18 +483,51 @@ class MirrorJudge(gl.Contract):
         case["rounds"].append({"n": n, "decision": decision})
         if decision.startswith("DECIDED|"):
             case["status"] = "JUDGED"
+            case["judged_at_ts"] = now
+        elif decision.startswith("UNSTABLE|") and len(case["rounds"]) < case["max_rounds"]:
+            case["status"] = "OPEN"
+            case["ready"] = {P1: False, P2: False}
+            case["closed_at_ts"] = 0
+            case["evidence_deadline_ts"] = now + EVIDENCE_WINDOW_SECONDS
+        else:
+            case["status"] = "JUDGED"
+            case["judged_at_ts"] = now
         self.cases[case_id] = json.dumps(case)
         return decision
 
     @gl.public.write
     def finalize(self, case_id: str) -> None:
+        """
+        Acknowledge the judged certificate and transition to FINAL.
+        Rationale: the counterparty gets a defined review period (FINALIZE_WINDOW_SECONDS)
+        to inspect the certificate before single-party closure, while a silent counterparty
+        cannot block closure forever once that window has elapsed.
+        """
         if case_id not in self.cases:
             raise gl.vm.UserError("case not found")
         case = json.loads(self.cases[case_id])
+        if case["status"] == "FINAL":
+            raise gl.vm.UserError("case is closed")
+
         sender = gl.message.sender_address.as_hex
-        if sender.lower() != case["opener"].lower() and sender.lower() != case["opposing"].lower():
-            raise gl.vm.UserError("only a party can finalize")
-        case["status"] = "FINAL"
+        by = self._resolve_party(case, sender, "only a party can finalize")
+
+        if case["status"] != "JUDGED":
+            raise gl.vm.UserError("case is not ready to finalize")
+
+        now = _now_ts()
+        window_elapsed = now >= case["judged_at_ts"] + FINALIZE_WINDOW_SECONDS
+
+        if case["final_acks"].get(by, False) and not window_elapsed:
+            raise gl.vm.UserError("already acknowledged")
+
+        case["final_acks"][by] = True
+        both_acked = case["final_acks"].get(P1, False) and case["final_acks"].get(P2, False)
+        any_acked = case["final_acks"].get(P1, False) or case["final_acks"].get(P2, False)
+
+        if both_acked or (any_acked and window_elapsed):
+            case["status"] = "FINAL"
+
         self.cases[case_id] = json.dumps(case)
 
     @gl.public.view
@@ -379,6 +549,12 @@ class MirrorJudge(gl.Contract):
             "opener": case["opener"],
             "opposing": case["opposing"],
             "status": case["status"],
+            "opened_at_ts": case.get("opened_at_ts", 0),
+            "evidence_deadline_ts": case.get("evidence_deadline_ts", 0),
+            "ready": case.get("ready", {P1: False, P2: False}),
+            "closed_at_ts": case.get("closed_at_ts", 0),
+            "judged_at_ts": case.get("judged_at_ts", 0),
+            "final_acks": case.get("final_acks", {P1: False, P2: False}),
             "config": {
                 "margin_bp": case["margin_bp"],
                 "max_flips": case["max_flips"],
@@ -392,35 +568,43 @@ class MirrorJudge(gl.Contract):
         }
         return json.dumps(cert)
 
+    @gl.public.view
+    def get_lifecycle(self, case_id: str) -> str:
+        if case_id not in self.cases:
+            return "{}"
+        case = json.loads(self.cases[case_id])
+        status = case["status"]
+        transitions = {
+            "OPEN": {"party": ["add_evidence", "mark_ready", "close_evidence(after deadline)"]},
+            "CLOSED": {"party": ["judge"]},
+            "JUDGED": {"party": ["finalize"]},
+            "FINAL": {"party": [], "consumer": ["settle_dispute"]},
+        }
+        info = {
+            "schema_version": SCHEMA_VERSION,
+            "case_id": case_id,
+            "status": status,
+            "opened_at_ts": case.get("opened_at_ts", 0),
+            "evidence_deadline_ts": case.get("evidence_deadline_ts", 0),
+            "ready": case.get("ready", {P1: False, P2: False}),
+            "closed_at_ts": case.get("closed_at_ts", 0),
+            "judged_at_ts": case.get("judged_at_ts", 0),
+            "final_acks": case.get("final_acks", {P1: False, P2: False}),
+            "rounds_used": len(case.get("rounds", [])),
+            "max_rounds": case.get("max_rounds", 3),
+            "evidence_window_seconds": EVIDENCE_WINDOW_SECONDS,
+            "finalize_window_seconds": FINALIZE_WINDOW_SECONDS,
+            "next_actions": {status: transitions.get(status, {"party": []})},
+        }
+        return json.dumps(info)
+
     def _compute_outcome(self, case: dict) -> str:
-        rounds = case.get("rounds", [])
-        status = case.get("status", "OPEN")
-        max_rounds = case.get("max_rounds", 3)
-
-        if not rounds:
-            if status == "FINAL":
-                return "NO_DECISION"
-            return "PENDING"
-
-        last_decision = rounds[-1].get("decision", "")
-        if last_decision.startswith("DECIDED|"):
-            parts = last_decision.split("|")
-            winner = parts[1]
-            if winner in (P1, P2, "SPLIT"):
-                return winner
-            return "NO_DECISION"
-
-        if last_decision.startswith("UNSTABLE|") or last_decision.startswith("INSUFFICIENT|"):
-            if len(rounds) >= max_rounds or status == "FINAL":
-                return "NO_DECISION"
-            return "PENDING"
-
-        return "PENDING"
+        return _compute_outcome_pure(case)
 
     @gl.public.view
     def outcome_for_consumer(self, case_id: str) -> str:
         if case_id not in self.cases:
-            return "NO_DECISION"
+            return "PENDING"
         case = json.loads(self.cases[case_id])
         return self._compute_outcome(case)
 

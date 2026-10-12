@@ -13,6 +13,9 @@ class MirrorJudgeConsumer(gl.Contract):
 
     @gl.public.write
     def settle_dispute(self, case_id: str) -> str:
+        if case_id in self.settlements:
+            raise gl.vm.UserError("already settled")
+
         judge = gl.get_contract_at(self.judge_address)
         outcome = judge.view().outcome_for_consumer(case_id)
 
