@@ -1,75 +1,100 @@
-# UI Verification Proof: On-Chain `UNSTABLE` Case (`cbbed41fefc3`)
+# UI Verification Proof: On-Chain `UNSTABLE` Case (`19f9bad34102`)
 
 ## 1. On-Chain Case & RPC Coordinates
-- **Contract Address**: `0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D`
-- **Case ID**: `cbbed41fefc3`
+- **Contract Address**: `0x2cb49A03fcc9b8c65E3cd9348826b2d13808d8FE`
+- **Case ID**: `19f9bad34102`
 - **Title**: `Cross-Border Escrow & SLA Addendum Attribution Dispute`
-- **`open_case` Tx**: `0xa3e30f86e5677c7b069b3c42bd2769a6f90e27570cca39c24a2017151e4ff2aa`
-- **Party 1 `add_evidence` Tx**: `0x1edb1ec2e78ab87cb4396d5548df6426ea47615f36ac4249f73455c9355b3bae`
-- **Party 2 `add_evidence` Tx**: `0xa4605d01bf0f17c5ca6264f75f355d9f4a351343058e69021a28eb94c774f8bd`
-- **`judge` Tx**: `0x8472dbad8e0bdc0f3049db16ca509e3b539a5d938b2bff5a389aff2d16e2c3a2`
-- **RPC View Call**: `get_certificate("cbbed41fefc3")`
-- **Field Read**: `current_decision = "UNSTABLE|NONE|UNSTABLE"`, `rounds[0].decision = "UNSTABLE|NONE|UNSTABLE"`
+- **`open_case` Tx**: `0xeb96d6421daac8e85e7648517452fae593ca15b6ab51e2c793b29b6569b0e00b`
+- **Party 1 `add_evidence` Tx**: `0xb77ac30acb220664c574941c463ac9b5d2899655baee3fe6e0ce1882056314f7`
+- **Party 1 `mark_ready` Tx**: `0xe83357fdf5e64f6062b7ebdb71a923c4a4289e320cf1a5dd0f8c0cead0574f29`
+- **Party 2 `add_evidence` Tx**: `0x90a35868f67391f5bd9d5284afc7008f87977e42c3f33f9031fe62626e7408c5`
+- **Party 2 `mark_ready` Tx**: `0xcf01f31e39c003de1a280b19dd0d1754c2fc57db455ddd353b463845beac5ef6`
+- **`judge` Tx**: `0xfd6a4e5acb7404ff8d060a5618246a98e535a66641e18fe23ffbe488c81b92de`
+- **RPC View Call**: `get_certificate("19f9bad34102")`
+- **Field Read**: `status = "OPEN"`, `current_decision = "UNSTABLE|NONE|UNSTABLE"`, `rounds[0].decision = "UNSTABLE|NONE|UNSTABLE"`, `ready = {"PARTY_1":false,"PARTY_2":false}`
 
 ## 2. Rendered DOM Assertions (All 4 Demo Cases A, B, C, D)
-- **Demo A (`0551168cd4f5`)**: badge `stable` (`STABLE`), title `STABLE CERTIFICATE`
-- **Demo B (`4e4a3aa372e6`)**: badge `insufficient` (`INSUFFICIENT EVIDENCE`), title `INSUFFICIENT EVIDENCE`
-- **Demo C (`8f128188b6c6`)**: badge `split` (`SPLIT VERDICT`), title `SPLIT DETERMINATION`
-- **Demo D (`cbbed41fefc3`)**: badge `unstable` (`UNSTABLE`), title `UNSTABLE CERTIFICATE`
+- **Demo A (`43288877b73b`)**: badge `stable` (`STABLE`), title `STABLE CERTIFICATE`
+- **Demo B (`6df124828b58`)**: badge `insufficient` (`INSUFFICIENT EVIDENCE`), title `INSUFFICIENT EVIDENCE`
+- **Demo C (`f9462ef8b2b5`)**: badge `split` (`SPLIT VERDICT`), title `SPLIT DETERMINATION`
+- **Demo D (`19f9bad34102`)**: badge `unstable` (`UNSTABLE`), title `UNSTABLE CERTIFICATE`, status `OPEN (Evidence reopened for Round 2)`
 - **Standalone `STABLE` matches on Demo D page (`/(?<!UN)STABLE/`)**: `0`
-- **Screenshot**: `docs/unstable_case_cbbed41fefc3.png`
+- **Screenshot**: `docs/unstable_case_19f9bad34102.png`
 
-## 3. Captured Visible Text from Rendered Workbench (`/#/app?case=cbbed41fefc3`)
+## 3. Captured Visible Text from Rendered Workbench (`/#/app?case=19f9bad34102`)
 ```text
 Second-Opinion Desk
 Bias-Cancelled On-Chain Adjudication
 Overview
 Workbench
-GenLayer Studionet
+GenLayer Studionet (Preview)
 Contract
 Connect Wallet
 Dispute Workbench
-GenLayer Studionet
+GenLayer Studionet (Preview)
 
-MirrorJudge does not require a payment value for case creation, evidence, or adjudication.
+How to try it: Open -> Add evidence & Mark ready -> Judge -> Acknowledge -> Settle on Consumer.
 
 Connect Wallet
 Cases
 Open
 Evidence
 Judge
-On-Chain Demos
+On-Chain Demos (Schema 2.0.0)
 No Wallet Required
-Demo A
-0551168cd4f5
-Clear-cut milestone delivery verified via git logs.
-DECIDED · PARTY 1
+Demo A (Both Ready + Dual Ack)
+43288877b73b
+Both parties mark ready -> CLOSED -> judge -> both acknowledge -> FINAL (SETTLED_PARTY_1).
+FINAL | DECIDED | PARTY 1
 Inspect
-Demo B
-4e4a3aa372e6
-Missing counterparty evidence resolved deterministically without LLM bias.
-INSUFFICIENT · NONE
+Demo B (10m Timeout Close)
+6df124828b58
+Party 2 silent across 600s window -> close_evidence -> INSUFFICIENT -> FINAL (ESCALATED).
+FINAL | INSUFFICIENT | NONE
 Inspect
-Demo C
-8f128188b6c6
-Balanced deliverable landing within tolerance threshold.
-DECIDED · SPLIT
+Demo C (5m Review Window Close)
+f9462ef8b2b5
+Balanced SLA claims -> SPLIT verdict -> 1 party ack + 300s review window -> FINAL (SETTLED_SPLIT).
+FINAL | DECIDED | SPLIT
 Inspect
-Demo D
-cbbed41fefc3
-Ambiguous addendum attribution where canonical and mirrored passes diverge.
-UNSTABLE · NONE · UNSTABLE
+Demo D (Unstable -> Reopened)
+19f9bad34102
+Canonical and mirrored passes diverge -> UNSTABLE -> auto-reopened to OPEN for Round 2.
+OPEN (Round 2) | UNSTABLE
 Inspect
 Query
 RECENT CASES ON STUDIONET:
-f3cbc82d81ae
-0d139220ef5b
-6fd687d1eb8c
-43043d4b7066
-cbbed41fefc3
-ID: cbbed41fefc3
-Status: OPEN
+7923db9ec56d
+f9462ef8b2b5
+6df124828b58
+a743e1847131
+6a1696f2cc64
+ID: 19f9bad34102
+Status: OPEN (Evidence reopened for Round 2)
+Schema 2.0.0
 Cross-Border Escrow & SLA Addendum Attribution Dispute
+4-PHASE DISPUTE LIFECYCLE
+Role: Observer (Read-Only)
+01 / OPEN
+Evidence & Readiness
+02 / CLOSED
+Ready for Judging
+03 / JUDGED
+Review & Acknowledge
+04 / FINAL
+Closed & Settleable
+OPEN (Evidence reopened for Round 2)
+
+Round 1 was UNSTABLE -- evidence reopened for Round 2 with a fresh 10-minute window. Both parties must mark ready again (or wait for the deadline) before re-judging.
+
+PHASE 1: EVIDENCE & READINESS WINDOW (10M)
+Window expired -- either party may close evidence
+Evidence Deadline: 2026-10-11T18:32:58 UTC (unix: 1791743578)
+Party 1: Submitting (1/3 items)
+Party 2: Submitting (1/3 items)
+Mark ready
+Close evidence
+Connect as Party 1 or Party 2 to submit evidence, mark ready, or close the window.
 AUTHORITATIVE VERDICT
 UNSTABLE
 UNSTABLE CERTIFICATE
@@ -99,25 +124,29 @@ Entry #2
 Joint Escrow Audit Log #882 Counter-Statement: Solstice Digital acknowledges the independent audit log and confirms the signed settlement addendum explicitly designates PARTY_1 as the compliant operator for both latency_...
 
 Read full entry
-PARTY 1
-0x1d0f0b77EaE3CeA5071470795cd1BC9e25Ab8156
+PARTY 1 (OPENER)
+Ready: No | Ack: No
+0x7e34ca893DD193f3ef910E6114eD710fD444a878
 Aliases: Meridian, Meridian Labs
-PARTY 2
-0xC8014F4390875FA6B3f2E90010739FD4D3b14607
+PARTY 2 (OPPOSING)
+Ready: No | Ack: No
+0xA8feCE721C6DCD915e6d06D798d5c0Eda673262b
 Aliases: Solstice, Solstice Digital
-Downstream Consumer Integration
-Outcome: PENDING
+Downstream Consumer Settlement
+outcome_for_consumer: PENDING
+Settle on Consumer
+Requires case status FINAL before settlement
 Second-Opinion Desk
 
-A decentralized dispute adjudication workbench powered by MirrorJudge on GenLayer Studionet Preview. Validates LLM position invariance via dual-pass canonical and mirrored evaluation under validator consensus.
+A decentralized dispute adjudication workbench powered by MirrorJudge on GenLayer Studionet (Preview). Enforces a 4-phase readiness and closing lifecycle (`OPEN -> CLOSED -> JUDGED -> FINAL`) and dual-pass mirrored evaluation under validator consensus.
 
-Zero gas price network • Pure Python Intelligent Contracts on GenVM
+Zero gas price network | Pure Python Intelligent Contracts on GenVM
 CONTRACTS (STUDIONET)
-MirrorJudge Core
-Consumer Settlement
+MirrorJudge (0x2cb4...d8FE)
+Consumer (0xEC8B...9251)
 SOURCE REPOSITORIES
 Contract Repo (MirrorJudge)
 dApp Repo (Second-Opinion Desk)
-Released under MIT License. GenLayer Studionet Preview (Chain ID 61999).
-Deterministic Dual-Pass Architecture
+Released under MIT License. GenLayer Studionet (Preview) (Chain ID 61999).
+Deterministic Dual-Pass Architecture (Schema 2.0.0)
 ```
