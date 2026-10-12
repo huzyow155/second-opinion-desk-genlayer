@@ -22,7 +22,7 @@ def check_ascii(filepath):
         return True
 
 if __name__ == '__main__':
-    target = sys.argv[1] if len(sys.argv) > 1 else 'contracts'
+    target = sys.argv[1] if len(sys.argv) > 1 else 'contracts-reference'
     all_ok = True
     if os.path.isfile(target):
         if not check_ascii(target):

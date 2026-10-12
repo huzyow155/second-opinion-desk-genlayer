@@ -41,6 +41,7 @@ const {
   STUDIONET_CONFIG,
   executeOpenCase,
   executeAddEvidence,
+  executeMarkReady,
   executeJudge,
   executeFinalize,
   executeConsumerSettle,
@@ -48,6 +49,7 @@ const {
   verifyPostWriteState,
   fetchCase,
   fetchCertificate,
+  fetchLifecycle,
   fetchConsumerSettlement,
   fetchLatestCaseForPair,
   extractRevertReason,
@@ -78,7 +80,7 @@ function assertStrictSuccessReceipt(res, stepLabel) {
 
 async function main() {
   console.log('================================================================');
-  console.log('COMPREHENSIVE E2E SUITE (REAL chain.ts + contractService.ts)');
+  console.log('COMPREHENSIVE v2.0.0 E2E SUITE (REAL chain.ts + contractService.ts)');
   console.log('MirrorJudge Address:        ', MIRROR_JUDGE_ADDRESS);
   console.log('MirrorJudgeConsumer Address:', CONSUMER_CONTRACT_ADDRESS);
   console.log('================================================================\n');
@@ -119,7 +121,7 @@ async function main() {
   const aliases1 = 'Alice, Alice Corp';
   const aliases2 = 'Bob, Bob Dev';
 
-  console.log('\n--- [Step 1/6] executeOpenCase ---');
+  console.log('\n--- [Step 1/9] executeOpenCase ---');
   const openTx = await executeOpenCase(
     client1,
     title,
@@ -138,14 +140,15 @@ async function main() {
 
   const openVerify = await verifyPostWriteState('open', caseId, { title });
   assert.equal(openVerify.verified, true, `verifyPostWriteState('open') failed: ${openVerify.message}`);
+  assert.equal(openVerify.readData.status, 'OPEN');
   console.log(`Tx Hash:  ${openTx}`);
   console.log(`Status:   ${openReceiptRes.receipt.status_name} (leader_receipt: ${JSON.stringify(openLeaderExec)})`);
-  console.log(`Readback: case_id=${caseId}, status=${openVerify.readData.status}, title="${openVerify.readData.title}"`);
+  console.log(`Readback: case_id=${caseId}, status=${openVerify.readData.status}, evidence_deadline_ts=${openVerify.readData.evidence_deadline_ts}`);
 
   // -------------------------------------------------------------------------
   // 2. ADD_EVIDENCE (PARTY 1)
   // -------------------------------------------------------------------------
-  console.log('\n--- [Step 2/6] executeAddEvidence (Party 1) ---');
+  console.log('\n--- [Step 2/9] executeAddEvidence (Party 1) ---');
   const ev1 =
     'Alice Corp submitted audited git repository logs and test suites proving Alice completed all software deliverables with zero critical defects.';
   const ev1Tx = await executeAddEvidence(client1, caseId, ev1);
@@ -159,9 +162,26 @@ async function main() {
   console.log(`Readback: evidence.length=${ev1Verify.readData.evidence.length}, last.by=${ev1Verify.readData.evidence.at(-1).by}`);
 
   // -------------------------------------------------------------------------
-  // 3. ADD_EVIDENCE (PARTY 2)
+  // 3. MARK_READY (PARTY 1)
   // -------------------------------------------------------------------------
-  console.log('\n--- [Step 3/6] executeAddEvidence (Party 2) ---');
+  console.log('\n--- [Step 3/9] executeMarkReady (Party 1) ---');
+  const mr1Tx = await executeMarkReady(client1, caseId);
+  const mr1ReceiptRes = await waitForReceiptWithProgress(client1, mr1Tx);
+  const mr1LeaderExec = assertStrictSuccessReceipt(mr1ReceiptRes, 'mark_ready_party_1');
+
+  const mr1Verify = await verifyPostWriteState('ready', caseId, { partyKey: 'PARTY_1', expectClosed: false });
+  assert.equal(mr1Verify.verified, true, `verifyPostWriteState('ready' P1) failed: ${mr1Verify.message}`);
+  assert.equal(mr1Verify.readData.status, 'OPEN');
+  assert.equal(mr1Verify.readData.ready.PARTY_1, true);
+  assert.equal(mr1Verify.readData.ready.PARTY_2, false);
+  console.log(`Tx Hash:  ${mr1Tx}`);
+  console.log(`Status:   ${mr1ReceiptRes.receipt.status_name} (leader_receipt: ${JSON.stringify(mr1LeaderExec)})`);
+  console.log(`Readback: status=${mr1Verify.readData.status}, ready=${JSON.stringify(mr1Verify.readData.ready)}`);
+
+  // -------------------------------------------------------------------------
+  // 4. ADD_EVIDENCE (PARTY 2)
+  // -------------------------------------------------------------------------
+  console.log('\n--- [Step 4/9] executeAddEvidence (Party 2) ---');
   const ev2 =
     'Bob Dev explicitly admits in written correspondence: Alice Corp successfully completed all software deliverables on schedule and complied with specifications.';
   const ev2Tx = await executeAddEvidence(client2, caseId, ev2);
@@ -175,9 +195,26 @@ async function main() {
   console.log(`Readback: evidence.length=${ev2Verify.readData.evidence.length}, last.by=${ev2Verify.readData.evidence.at(-1).by}`);
 
   // -------------------------------------------------------------------------
-  // 4. JUDGE
+  // 5. MARK_READY (PARTY 2) -> auto-transitions status to CLOSED
   // -------------------------------------------------------------------------
-  console.log('\n--- [Step 4/6] executeJudge ---');
+  console.log('\n--- [Step 5/9] executeMarkReady (Party 2) -> status CLOSED ---');
+  const mr2Tx = await executeMarkReady(client2, caseId);
+  const mr2ReceiptRes = await waitForReceiptWithProgress(client2, mr2Tx);
+  const mr2LeaderExec = assertStrictSuccessReceipt(mr2ReceiptRes, 'mark_ready_party_2');
+
+  const mr2Verify = await verifyPostWriteState('ready', caseId, { partyKey: 'PARTY_2', expectClosed: true });
+  assert.equal(mr2Verify.verified, true, `verifyPostWriteState('ready' P2) failed: ${mr2Verify.message}`);
+  assert.equal(mr2Verify.readData.status, 'CLOSED');
+  assert.equal(mr2Verify.readData.ready.PARTY_1, true);
+  assert.equal(mr2Verify.readData.ready.PARTY_2, true);
+  console.log(`Tx Hash:  ${mr2Tx}`);
+  console.log(`Status:   ${mr2ReceiptRes.receipt.status_name} (leader_receipt: ${JSON.stringify(mr2LeaderExec)})`);
+  console.log(`Readback: status=${mr2Verify.readData.status}, ready=${JSON.stringify(mr2Verify.readData.ready)}`);
+
+  // -------------------------------------------------------------------------
+  // 6. JUDGE -> status JUDGED, outcome PENDING
+  // -------------------------------------------------------------------------
+  console.log('\n--- [Step 6/9] executeJudge ---');
   const judgeTx = await executeJudge(client1, caseId);
   const judgeReceiptRes = await waitForReceiptWithProgress(client1, judgeTx);
   const judgeLeaderExec = assertStrictSuccessReceipt(judgeReceiptRes, 'judge');
@@ -187,29 +224,57 @@ async function main() {
   const certRead = await fetchCertificate(caseId);
   assert.equal(certRead.ok, true);
   assert.ok(certRead.data);
+  assert.equal(certRead.data.status, 'JUDGED');
+  assert.equal(certRead.data.outcome, 'PENDING');
   console.log(`Tx Hash:  ${judgeTx}`);
   console.log(`Status:   ${judgeReceiptRes.receipt.status_name} (leader_receipt: ${JSON.stringify(judgeLeaderExec)})`);
-  console.log(`Readback: current_decision=${certRead.data.current_decision}, is_decided=${certRead.data.is_decided}, rounds=${certRead.data.rounds.length}`);
+  console.log(`Readback: status=${certRead.data.status}, current_decision=${certRead.data.current_decision}, outcome=${certRead.data.outcome}`);
 
   // -------------------------------------------------------------------------
-  // 5. FINALIZE
+  // 7. FINALIZE (PARTY 1 - 1st Ack) -> stays JUDGED, final_acks.PARTY_1 = true
   // -------------------------------------------------------------------------
-  console.log('\n--- [Step 5/6] executeFinalize ---');
-  const finalizeTx = await executeFinalize(client1, caseId);
-  const finalizeReceiptRes = await waitForReceiptWithProgress(client1, finalizeTx);
-  const finalizeLeaderExec = assertStrictSuccessReceipt(finalizeReceiptRes, 'finalize');
+  console.log('\n--- [Step 7/9] executeFinalize (Party 1 - 1st Ack) ---');
+  const fin1Tx = await executeFinalize(client1, caseId);
+  const fin1ReceiptRes = await waitForReceiptWithProgress(client1, fin1Tx);
+  const fin1LeaderExec = assertStrictSuccessReceipt(fin1ReceiptRes, 'finalize_party_1');
 
-  const finalizeVerify = await verifyPostWriteState('finalize', caseId);
-  assert.equal(finalizeVerify.verified, true, `verifyPostWriteState('finalize') failed: ${finalizeVerify.message}`);
-  assert.equal(finalizeVerify.readData.status, 'FINAL');
-  console.log(`Tx Hash:  ${finalizeTx}`);
-  console.log(`Status:   ${finalizeReceiptRes.receipt.status_name} (leader_receipt: ${JSON.stringify(finalizeLeaderExec)})`);
-  console.log(`Readback: case.status=${finalizeVerify.readData.status}`);
+  const fin1Verify = await verifyPostWriteState('finalize', caseId, { partyKey: 'PARTY_1', expectFinal: false });
+  assert.equal(fin1Verify.verified, true, `verifyPostWriteState('finalize' P1) failed: ${fin1Verify.message}`);
+  assert.equal(fin1Verify.readData.status, 'JUDGED');
+  assert.equal(fin1Verify.readData.final_acks.PARTY_1, true);
+  assert.equal(fin1Verify.readData.final_acks.PARTY_2, false);
+  console.log(`Tx Hash:  ${fin1Tx}`);
+  console.log(`Status:   ${fin1ReceiptRes.receipt.status_name} (leader_receipt: ${JSON.stringify(fin1LeaderExec)})`);
+  console.log(`Readback: status=${fin1Verify.readData.status}, final_acks=${JSON.stringify(fin1Verify.readData.final_acks)}`);
 
   // -------------------------------------------------------------------------
-  // 6. CONSUMER SETTLE_DISPUTE
+  // 8. FINALIZE (PARTY 2 - 2nd Ack) -> transitions to FINAL, outcome != PENDING
   // -------------------------------------------------------------------------
-  console.log('\n--- [Step 6/6] executeConsumerSettle ---');
+  console.log('\n--- [Step 8/9] executeFinalize (Party 2 - 2nd Ack -> FINAL) ---');
+  const fin2Tx = await executeFinalize(client2, caseId);
+  const fin2ReceiptRes = await waitForReceiptWithProgress(client2, fin2Tx);
+  const fin2LeaderExec = assertStrictSuccessReceipt(fin2ReceiptRes, 'finalize_party_2');
+
+  const fin2Verify = await verifyPostWriteState('finalize', caseId, { partyKey: 'PARTY_2', expectFinal: true });
+  assert.equal(fin2Verify.verified, true, `verifyPostWriteState('finalize' P2) failed: ${fin2Verify.message}`);
+  assert.equal(fin2Verify.readData.status, 'FINAL');
+  assert.equal(fin2Verify.readData.final_acks.PARTY_1, true);
+  assert.equal(fin2Verify.readData.final_acks.PARTY_2, true);
+  const certFinalRead = await fetchCertificate(caseId);
+  assert.equal(certFinalRead.ok, true);
+  assert.equal(certFinalRead.data.status, 'FINAL');
+  assert.notEqual(certFinalRead.data.outcome, 'PENDING');
+  const lcFinalRead = await fetchLifecycle(caseId);
+  assert.equal(lcFinalRead.ok, true);
+  assert.equal(lcFinalRead.data.status, 'FINAL');
+  console.log(`Tx Hash:  ${fin2Tx}`);
+  console.log(`Status:   ${fin2ReceiptRes.receipt.status_name} (leader_receipt: ${JSON.stringify(fin2LeaderExec)})`);
+  console.log(`Readback: status=${certFinalRead.data.status}, final_acks=${JSON.stringify(certFinalRead.data.final_acks)}, outcome=${certFinalRead.data.outcome}`);
+
+  // -------------------------------------------------------------------------
+  // 9. CONSUMER SETTLE_DISPUTE
+  // -------------------------------------------------------------------------
+  console.log('\n--- [Step 9/9] executeConsumerSettle ---');
   const settleTx = await executeConsumerSettle(client1, caseId);
   const settleReceiptRes = await waitForReceiptWithProgress(client1, settleTx);
   const settleLeaderExec = assertStrictSuccessReceipt(settleReceiptRes, 'settle_dispute');
@@ -302,26 +367,17 @@ async function main() {
       rpcUrls: { default: { http: ['http://127.0.0.1:9'] } },
     },
   });
-  const unreachableRes = await fetchCase('0551168cd4f5', unreachableClient);
+  const unreachableRes = await fetchCase('43288877b73b', unreachableClient);
   assert.equal(unreachableRes.ok, false, 'Unreachable RPC must return ok: false');
   assert.equal('data' in unreachableRes, false, 'Unreachable RPC result must NEVER contain data: null');
   console.log(`Result:   ${JSON.stringify(unreachableRes)}`);
 
   const totalDurationSec = ((Date.now() - overallStart) / 1000).toFixed(2);
 
-  // Preserve existing reference metadata in scripts/fresh_e2e_evidence.json while recording the fresh run
   const evidencePath = path.resolve('./scripts/fresh_e2e_evidence.json');
-  let existingData = {};
-  if (fs.existsSync(evidencePath)) {
-    try {
-      existingData = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
-    } catch {
-      existingData = {};
-    }
-  }
-
   const freshE2ERun = {
     executedAt: new Date().toISOString(),
+    schemaVersion: '2.0.0',
     mirrorJudgeAddress: MIRROR_JUDGE_ADDRESS,
     consumerContractAddress: CONSUMER_CONTRACT_ADDRESS,
     caseId,
@@ -338,7 +394,8 @@ async function main() {
         readback: {
           case_id: openVerify.readData.case_id,
           status: openVerify.readData.status,
-          title: openVerify.readData.title,
+          opened_at_ts: openVerify.readData.opened_at_ts,
+          evidence_deadline_ts: openVerify.readData.evidence_deadline_ts,
         },
       },
       add_evidence_party_1: {
@@ -352,6 +409,17 @@ async function main() {
           lastEntryBy: ev1Verify.readData.evidence.at(-1).by,
         },
       },
+      mark_ready_party_1: {
+        txHash: mr1Tx,
+        status: mr1ReceiptRes.receipt.status_name,
+        leaderExecution: mr1LeaderExec,
+        durationSec: mr1ReceiptRes.durationSec,
+        verified: mr1Verify.verified,
+        readback: {
+          status: mr1Verify.readData.status,
+          ready: mr1Verify.readData.ready,
+        },
+      },
       add_evidence_party_2: {
         txHash: ev2Tx,
         status: ev2ReceiptRes.receipt.status_name,
@@ -363,6 +431,17 @@ async function main() {
           lastEntryBy: ev2Verify.readData.evidence.at(-1).by,
         },
       },
+      mark_ready_party_2: {
+        txHash: mr2Tx,
+        status: mr2ReceiptRes.receipt.status_name,
+        leaderExecution: mr2LeaderExec,
+        durationSec: mr2ReceiptRes.durationSec,
+        verified: mr2Verify.verified,
+        readback: {
+          status: mr2Verify.readData.status,
+          ready: mr2Verify.readData.ready,
+        },
+      },
       judge: {
         txHash: judgeTx,
         status: judgeReceiptRes.receipt.status_name,
@@ -371,14 +450,27 @@ async function main() {
         verified: judgeVerify.verified,
         readback: certRead.data,
       },
-      finalize: {
-        txHash: finalizeTx,
-        status: finalizeReceiptRes.receipt.status_name,
-        leaderExecution: finalizeLeaderExec,
-        durationSec: finalizeReceiptRes.durationSec,
-        verified: finalizeVerify.verified,
+      finalize_party_1: {
+        txHash: fin1Tx,
+        status: fin1ReceiptRes.receipt.status_name,
+        leaderExecution: fin1LeaderExec,
+        durationSec: fin1ReceiptRes.durationSec,
+        verified: fin1Verify.verified,
         readback: {
-          status: finalizeVerify.readData.status,
+          status: fin1Verify.readData.status,
+          final_acks: fin1Verify.readData.final_acks,
+        },
+      },
+      finalize_party_2: {
+        txHash: fin2Tx,
+        status: fin2ReceiptRes.receipt.status_name,
+        leaderExecution: fin2LeaderExec,
+        durationSec: fin2ReceiptRes.durationSec,
+        verified: fin2Verify.verified,
+        readback: {
+          status: certFinalRead.data.status,
+          final_acks: certFinalRead.data.final_acks,
+          outcome: certFinalRead.data.outcome,
         },
       },
       consumer_settle_dispute: {
@@ -408,13 +500,13 @@ async function main() {
   };
 
   const updatedEvidence = {
-    ...existingData,
+    schemaVersion: '2.0.0',
     contractAddress: MIRROR_JUDGE_ADDRESS,
     consumerContractAddress: CONSUMER_CONTRACT_ADDRESS,
     freshE2ERun,
   };
 
-  fs.writeFileSync(evidencePath, JSON.stringify(updatedEvidence, null, 2), 'utf8');
+  fs.writeFileSync(evidencePath, JSON.stringify(updatedEvidence, null, 2) + '\n', 'utf8');
   console.log(`\n=== ALL POSITIVE & NEGATIVE E2E CHECKS PASSED IN ${totalDurationSec}s ===`);
   console.log('Saved fresh run results to scripts/fresh_e2e_evidence.json');
 }

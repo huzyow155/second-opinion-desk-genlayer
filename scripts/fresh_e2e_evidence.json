@@ -1,280 +1,66 @@
 {
-  "network": "studionet",
-  "chainId": 61999,
-  "rpcUrl": "https://studio.genlayer.com/api",
-  "explorerBaseUrl": "https://explorer-studio.genlayer.com/address/",
-  "contractAddress": "0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D",
-  "deployTxHash": "0xf32d2573b81b086b226658434d04e2eca4103e9610ea98f4a38f54fd769edbc3",
-  "deployDurationSec": "6.79",
-  "consumerContractAddress": "0x4FC86C019ec00Aa911A4D34986e33be2Cd94b837",
-  "consumerDeployTxHash": "0xd74c65db6cc9256cc6f1221e5003c979c7e11e19dc4a919cc80498f454d302f1",
-  "localJudgeSha256": "123c0dbe36a376213d20c2e42bda22f82f51be184a42295d98fe36e882ae0594",
-  "deployedCodeSha256": "123c0dbe36a376213d20c2e42bda22f82f51be184a42295d98fe36e882ae0594",
-  "sourceMatches": true,
-  "invalidWeightRejectionTest": {
-    "passed": true,
-    "txHash": "0xf0432b2b1962aa023200e1c78cbcc2ecef7ea11d138b5e035b1e5cc7df894d46",
-    "executionResult": "ERROR"
-  },
-  "caseA": {
-    "caseId": "0551168cd4f5",
-    "openTx": "0xa566b8c02f3450e261a4bab8e8b786645ce2f26235c668c7f83dbe25e11a14e7",
-    "ev1Tx": "0xd1607b7efab4dc48cf1adda5cf1e75d767335591f208673b996c888984bf6866",
-    "ev2Tx": "0xa3217321d35a905842dba86c2aa7865d29c001965947261eadab7b08069ed47e",
-    "judgeTx": "0x6fea6f4ae90aeec35bab0ecf53ca0228bbb846b85f889ca9030c82d6915a04f4",
-    "judgeLatencySec": "31.73",
-    "receiptStatus": "ACCEPTED",
-    "receiptResult": "MAJORITY_AGREE",
-    "leaderResult": "SUCCESS",
-    "certificate": {
-      "schema_version": "1.0",
-      "case_id": "0551168cd4f5",
-      "title": "Freelance Milestone 1 Delivery Verification",
-      "opener": "0xBe05c5CBeAd918924AEB9Ec4F327A823d8378f34",
-      "opposing": "0xF14a9365Fa5F9Ab0393BFBf1C75EC62ab68d11C2",
-      "status": "JUDGED",
-      "config": {
-        "margin_bp": 1500,
-        "max_flips": 1,
-        "max_rounds": 3,
-        "criteria": [
-          {
-            "id": "milestone_delivery",
-            "text": "Which party substantiated full completion of milestone deliverables: PARTY_1 or PARTY_2?",
-            "weight_bp": 6000
-          },
-          {
-            "id": "spec_compliance",
-            "text": "Which party adhered to specifications and code standards: PARTY_1 or PARTY_2?",
-            "weight_bp": 4000
-          }
-        ]
-      },
-      "rounds": [
-        {
-          "n": 1,
-          "decision": "DECIDED|PARTY_1|STABLE"
-        }
-      ],
-      "current_decision": "DECIDED|PARTY_1|STABLE",
-      "is_decided": true,
-      "outcome": "PARTY_1"
-    },
-    "consumerSettleTx": "0xe7eff1f77233abad21b16d1acd26f267a0c9bc56b0cf052cc645e0830c6b1701",
-    "settledResult": "SETTLED_PARTY_1"
-  },
-  "caseB": {
-    "caseId": "4e4a3aa372e6",
-    "openTx": "0x42a228ee8e78df027b573de462092dccddf2b312859174f22a99784761f3e32d",
-    "ev1Tx": "0xb1f4fd6dde816122dd0f757faf57cde310767a97d5fb854705602d8b78d945d1",
-    "judgeTx": "0xf06e7bd5c09a6dd5b037afd85795b32a15beab373f590c454d5c23212c176126",
-    "judgeLatencySec": "5.25",
-    "receiptStatus": "ACCEPTED",
-    "receiptResult": "MAJORITY_AGREE",
-    "leaderResult": "SUCCESS",
-    "certificate": {
-      "schema_version": "1.0",
-      "case_id": "4e4a3aa372e6",
-      "title": "Commercial Lease Cleaning Deposit Dispute",
-      "opener": "0xBe05c5CBeAd918924AEB9Ec4F327A823d8378f34",
-      "opposing": "0xF14a9365Fa5F9Ab0393BFBf1C75EC62ab68d11C2",
-      "status": "OPEN",
-      "config": {
-        "margin_bp": 1500,
-        "max_flips": 1,
-        "max_rounds": 3,
-        "criteria": [
-          {
-            "id": "premises_restoration",
-            "text": "Which party substantiated proper restoration and professional cleaning of premises: PARTY_1 or PARTY_2?",
-            "weight_bp": 10000
-          }
-        ]
-      },
-      "rounds": [
-        {
-          "n": 1,
-          "decision": "INSUFFICIENT|NONE|NA"
-        }
-      ],
-      "current_decision": "INSUFFICIENT|NONE|NA",
-      "is_decided": false,
-      "outcome": "PENDING"
-    }
-  },
-  "caseC": {
-    "caseId": "8f128188b6c6",
-    "openTx": "0xe1ac4ce2f9fbacb728235b5937408710bbbce40c890de31b01cc478c68f0b066",
-    "round1": {
-      "ev1Tx": "0x60d21c342631a712607dc93a722a9ee34bd35a8486c4547d7e8a11bc7d819dd5",
-      "ev2Tx": "0x2c1479e41ea6ffa8c07d61b8fa1f31738bb3f9531475eecf1c5c8b31cfce158a",
-      "judgeTx": "0x6fbf8d9edcbf523a4c4b27d8148608408a108949f10e2ffc3ac09221f0768580",
-      "judgeLatencySec": "28.48",
-      "receiptStatus": "ACCEPTED",
-      "receiptResult": "MAJORITY_AGREE",
-      "leaderResult": "SUCCESS",
-      "certificate": {
-        "schema_version": "1.0",
-        "case_id": "8f128188b6c6",
-        "title": "API Gateway Infrastructure SLA Milestone Dispute",
-        "opener": "0xBe05c5CBeAd918924AEB9Ec4F327A823d8378f34",
-        "opposing": "0xF14a9365Fa5F9Ab0393BFBf1C75EC62ab68d11C2",
-        "status": "JUDGED",
-        "config": {
-          "margin_bp": 1500,
-          "max_flips": 1,
-          "max_rounds": 3,
-          "criteria": [
-            {
-              "id": "sla_maintenance",
-              "text": "Which party substantiated superior system uptime and SLA maintenance: PARTY_1 or PARTY_2?",
-              "weight_bp": 10000
-            }
-          ]
-        },
-        "rounds": [
-          {
-            "n": 1,
-            "decision": "DECIDED|SPLIT|STABLE"
-          }
-        ],
-        "current_decision": "DECIDED|SPLIT|STABLE",
-        "is_decided": true,
-        "outcome": "SPLIT"
-      }
-    },
-    "round2": {
-      "ev3Tx": "0x60949d0c82bbb32f5ab42a61636f1afa33613affe0d70c24ed33803f077d9b01",
-      "ev4Tx": "0x7a37ca01b08a92d201758d93fc36b0d1df226594cc1ad6b900948d4a59be99ce",
-      "judgeTx": "0x8b66f9ea6e5940dac85d16b6235ac74802bc5b5da71dc9d3a1e7dfbdfa06b837",
-      "judgeLatencySec": "5.34",
-      "receiptStatus": "ACCEPTED",
-      "receiptResult": "MAJORITY_AGREE",
-      "leaderResult": "ERROR",
-      "certificate": {
-        "schema_version": "1.0",
-        "case_id": "8f128188b6c6",
-        "title": "API Gateway Infrastructure SLA Milestone Dispute",
-        "opener": "0xBe05c5CBeAd918924AEB9Ec4F327A823d8378f34",
-        "opposing": "0xF14a9365Fa5F9Ab0393BFBf1C75EC62ab68d11C2",
-        "status": "JUDGED",
-        "config": {
-          "margin_bp": 1500,
-          "max_flips": 1,
-          "max_rounds": 3,
-          "criteria": [
-            {
-              "id": "sla_maintenance",
-              "text": "Which party substantiated superior system uptime and SLA maintenance: PARTY_1 or PARTY_2?",
-              "weight_bp": 10000
-            }
-          ]
-        },
-        "rounds": [
-          {
-            "n": 1,
-            "decision": "DECIDED|SPLIT|STABLE"
-          }
-        ],
-        "current_decision": "DECIDED|SPLIT|STABLE",
-        "is_decided": true,
-        "outcome": "SPLIT"
-      }
-    }
-  },
-  "caseD": {
-    "caseId": "cbbed41fefc3",
-    "openTx": "0xa3e30f86e5677c7b069b3c42bd2769a6f90e27570cca39c24a2017151e4ff2aa",
-    "ev1Tx": "0x1edb1ec2e78ab87cb4396d5548df6426ea47615f36ac4249f73455c9355b3bae",
-    "ev2Tx": "0xa4605d01bf0f17c5ca6264f75f355d9f4a351343058e69021a28eb94c774f8bd",
-    "judgeTx": "0x8472dbad8e0bdc0f3049db16ca509e3b539a5d938b2bff5a389aff2d16e2c3a2",
-    "judgeLatencySec": "31.89",
-    "receiptStatus": "ACCEPTED",
-    "receiptResult": "MAJORITY_AGREE",
-    "leaderResult": "SUCCESS",
-    "rpcCall": {
-      "method": "get_certificate",
-      "args": [
-        "cbbed41fefc3"
-      ],
-      "fieldRead": "current_decision",
-      "fieldValue": "UNSTABLE|NONE|UNSTABLE"
-    },
-    "certificate": {
-      "schema_version": "1.0",
-      "case_id": "cbbed41fefc3",
-      "title": "Cross-Border Escrow & SLA Addendum Attribution Dispute",
-      "opener": "0x1d0f0b77EaE3CeA5071470795cd1BC9e25Ab8156",
-      "opposing": "0xC8014F4390875FA6B3f2E90010739FD4D3b14607",
-      "status": "OPEN",
-      "config": {
-        "margin_bp": 1500,
-        "max_flips": 1,
-        "max_rounds": 3,
-        "criteria": [
-          {
-            "id": "latency_benchmark",
-            "text": "Which party substantiated compliance with the primary API latency benchmark and addendum: PARTY_1 or PARTY_2?",
-            "weight_bp": 5000
-          },
-          {
-            "id": "settlement_attribution",
-            "text": "Which party is designated as the compliant operator under the joint audit addendum: PARTY_1 or PARTY_2?",
-            "weight_bp": 5000
-          }
-        ]
-      },
-      "rounds": [
-        {
-          "n": 1,
-          "decision": "UNSTABLE|NONE|UNSTABLE"
-        }
-      ],
-      "current_decision": "UNSTABLE|NONE|UNSTABLE",
-      "is_decided": false,
-      "outcome": "PENDING"
-    }
-  },
+  "schemaVersion": "2.0.0",
+  "contractAddress": "0x2cb49A03fcc9b8c65E3cd9348826b2d13808d8FE",
+  "consumerContractAddress": "0xEC8B7B09AE03cef02ae42bCD8ba28C530D809251",
   "freshE2ERun": {
-    "executedAt": "2026-10-10T18:11:17.079Z",
-    "mirrorJudgeAddress": "0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D",
-    "consumerContractAddress": "0x4FC86C019ec00Aa911A4D34986e33be2Cd94b837",
-    "caseId": "f3cbc82d81ae",
-    "title": "Fresh E2E Milestone Verification 1791655725361",
-    "party1": "0xB255280482e4Bed88072138D94B13ba5dA3dcC17",
-    "party2": "0x248933902dFd12B2b5AD2d4C75Ee676128F03343",
+    "executedAt": "2026-10-12T00:50:06.043Z",
+    "schemaVersion": "2.0.0",
+    "mirrorJudgeAddress": "0x2cb49A03fcc9b8c65E3cd9348826b2d13808d8FE",
+    "consumerContractAddress": "0xEC8B7B09AE03cef02ae42bCD8ba28C530D809251",
+    "caseId": "7923db9ec56d",
+    "title": "Fresh E2E Milestone Verification 1791766013609",
+    "party1": "0xb404b020dC9800563D0DDD06816F7D8cD89EF676",
+    "party2": "0x61F5dE1200148aEdbbb816CAeB9cf235b81B423E",
     "steps": {
       "open_case": {
-        "txHash": "0xce372b1b580a8a77a2ff85ae1733643d9fe17b930760ed071b2cf3585fe301b6",
+        "txHash": "0xc07f6c4b1d6e82352767b5f2d345b37af33b377a0c6876c22027c8bdf6630182",
         "status": "ACCEPTED",
         "leaderExecution": [
           "SUCCESS",
           "SUCCESS"
         ],
-        "durationSec": 4,
+        "durationSec": 7,
         "verified": true,
         "readback": {
-          "case_id": "f3cbc82d81ae",
+          "case_id": "7923db9ec56d",
           "status": "OPEN",
-          "title": "Fresh E2E Milestone Verification 1791655725361"
+          "opened_at_ts": 1791765954,
+          "evidence_deadline_ts": 1791766554
         }
       },
       "add_evidence_party_1": {
-        "txHash": "0x0f81f28899545f4abed8e658122b07d7bb0e0f85d0bee6217594590a1a6c3372",
+        "txHash": "0x2aa7d1554fcdc96c760ed0f018b78919916d7d7e3ade3b46705dc6aa47eac512",
         "status": "ACCEPTED",
         "leaderExecution": [
           "SUCCESS",
           "SUCCESS"
         ],
-        "durationSec": 5,
+        "durationSec": 7,
         "verified": true,
         "readback": {
           "evidenceCount": 1,
           "lastEntryBy": "PARTY_1"
         }
       },
+      "mark_ready_party_1": {
+        "txHash": "0xacfd96dc5f0029a92e93b276453e2ac511b9bdbf5e91bf2e7b172b94baebadee",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "SUCCESS",
+          "SUCCESS"
+        ],
+        "durationSec": 7,
+        "verified": true,
+        "readback": {
+          "status": "OPEN",
+          "ready": {
+            "PARTY_1": true,
+            "PARTY_2": false
+          }
+        }
+      },
       "add_evidence_party_2": {
-        "txHash": "0x3ea5f175b7d9692672a7db876590ac293e7084ed6b8e9422f61db3254f0aa2ed",
+        "txHash": "0x11dfd1d73b5d339de6124b17e4976a59d40a6691ba672c14a833902b8090fe14",
         "status": "ACCEPTED",
         "leaderExecution": [
           "SUCCESS",
@@ -287,22 +73,51 @@
           "lastEntryBy": "PARTY_2"
         }
       },
-      "judge": {
-        "txHash": "0x6429423749c7dd06e423893599f7121c46e3c009b9179d1fe7dfde00564e6100",
+      "mark_ready_party_2": {
+        "txHash": "0x2981c5a955fc12a0ba75a14508513d03fb4d3be69de950817f276dbdb813a2b8",
         "status": "ACCEPTED",
         "leaderExecution": [
           "SUCCESS",
           "SUCCESS"
         ],
-        "durationSec": 49,
+        "durationSec": 7,
         "verified": true,
         "readback": {
-          "schema_version": "1.0",
-          "case_id": "f3cbc82d81ae",
-          "title": "Fresh E2E Milestone Verification 1791655725361",
-          "opener": "0xB255280482e4Bed88072138D94B13ba5dA3dcC17",
-          "opposing": "0x248933902dFd12B2b5AD2d4C75Ee676128F03343",
+          "status": "CLOSED",
+          "ready": {
+            "PARTY_1": true,
+            "PARTY_2": true
+          }
+        }
+      },
+      "judge": {
+        "txHash": "0x7f195313de58703fa443dca95d8947a7a6e168e278b4df71daf252dbfac1fec4",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "SUCCESS",
+          "SUCCESS"
+        ],
+        "durationSec": 44,
+        "verified": true,
+        "readback": {
+          "schema_version": "2.0.0",
+          "case_id": "7923db9ec56d",
+          "title": "Fresh E2E Milestone Verification 1791766013609",
+          "opener": "0xb404b020dC9800563D0DDD06816F7D8cD89EF676",
+          "opposing": "0x61F5dE1200148aEdbbb816CAeB9cf235b81B423E",
           "status": "JUDGED",
+          "opened_at_ts": 1791765954,
+          "evidence_deadline_ts": 1791766554,
+          "ready": {
+            "PARTY_1": true,
+            "PARTY_2": true
+          },
+          "closed_at_ts": 1791766012,
+          "judged_at_ts": 1791766028,
+          "final_acks": {
+            "PARTY_1": false,
+            "PARTY_2": false
+          },
           "config": {
             "margin_bp": 1500,
             "max_flips": 1,
@@ -328,30 +143,52 @@
           ],
           "current_decision": "DECIDED|PARTY_1|STABLE",
           "is_decided": true,
+          "outcome": "PENDING"
+        }
+      },
+      "finalize_party_1": {
+        "txHash": "0x1d4311e648c89a1c2678f4bf2f10f63b4b7885af5ba0666098bb8b6261ce4ff0",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "SUCCESS",
+          "SUCCESS"
+        ],
+        "durationSec": 7,
+        "verified": true,
+        "readback": {
+          "status": "JUDGED",
+          "final_acks": {
+            "PARTY_1": true,
+            "PARTY_2": false
+          }
+        }
+      },
+      "finalize_party_2": {
+        "txHash": "0x9e3138e312166fb30e7bc1261fdfe10572b36a340c2ff7d6bd466791765e6a1b",
+        "status": "ACCEPTED",
+        "leaderExecution": [
+          "SUCCESS",
+          "SUCCESS"
+        ],
+        "durationSec": 7,
+        "verified": true,
+        "readback": {
+          "status": "FINAL",
+          "final_acks": {
+            "PARTY_1": true,
+            "PARTY_2": true
+          },
           "outcome": "PARTY_1"
         }
       },
-      "finalize": {
-        "txHash": "0xbda016ee5842470e3c43b3d9abe789182e46bab0cbfd75c967dae6b3aa78c8da",
-        "status": "ACCEPTED",
-        "leaderExecution": [
-          "SUCCESS",
-          "SUCCESS"
-        ],
-        "durationSec": 8,
-        "verified": true,
-        "readback": {
-          "status": "FINAL"
-        }
-      },
       "consumer_settle_dispute": {
-        "txHash": "0xc8201a7218aeba0f29a93b04b4df8980acda692f4d928b421cd836c95197a8f4",
+        "txHash": "0xd618c64fad0a53f808950e4d7a0b888145b88f28aa5fa39ec2cccf10a6bf6a61",
         "status": "ACCEPTED",
         "leaderExecution": [
           "SUCCESS",
           "SUCCESS"
         ],
-        "durationSec": 6,
+        "durationSec": 4,
         "verified": true,
         "readback": {
           "settlement": "SETTLED_PARTY_1"
@@ -361,7 +198,7 @@
     "negativeChecks": {
       "weightMinus1": {
         "passed": true,
-        "txHash": "0xf25dacee93c44bdda73dc05e5470a597fad49a0dc5027a9b4e79d62387091292",
+        "txHash": "0x21c53fe15b6a16b544e2cfdd3b125e9e5b28e4036cff6feb561f60b92a2df701",
         "status": "ACCEPTED",
         "leaderExecution": [
           "ERROR",
@@ -371,7 +208,7 @@
       },
       "weight10001": {
         "passed": true,
-        "txHash": "0x957490c3afc5858414d1001338251c121a4dc57b0905f8256fa7e454af4d62a5",
+        "txHash": "0x7ffc013a410cc47ea1fef080336ba7de38c213ae6b6ac1a843542229baaf1116",
         "status": "ACCEPTED",
         "leaderExecution": [
           "ERROR",
@@ -380,7 +217,7 @@
         "revertReason": "bad criterion weight"
       },
       "nonexistentCase": {
-        "caseId": "nonexist13ed",
+        "caseId": "nonexist911a",
         "result": {
           "ok": true,
           "data": null
@@ -394,6 +231,6 @@
         }
       }
     },
-    "totalDurationSec": "151.78"
+    "totalDurationSec": "192.50"
   }
 }

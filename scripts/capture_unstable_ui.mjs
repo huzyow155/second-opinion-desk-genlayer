@@ -13,7 +13,7 @@ const hardTimer = setTimeout(() => {
 }, 110000);
 hardTimer.unref();
 
-// Import VERIFIED_DEMO_CASES from real src/config/chain.ts
+// Import VERIFIED_DEMO_CASES and addresses from real src/config/chain.ts
 const chainTsPath = path.resolve('./src/config/chain.ts');
 const tmpChainMjs = path.resolve('./scripts/.tmp_ui_chain.mjs');
 const transpiled = ts.transpileModule(fs.readFileSync(chainTsPath, 'utf8'), {
@@ -22,9 +22,11 @@ const transpiled = ts.transpileModule(fs.readFileSync(chainTsPath, 'utf8'), {
 fs.writeFileSync(tmpChainMjs, transpiled.outputText, 'utf8');
 
 let VERIFIED_DEMO_CASES;
+let MIRROR_JUDGE_ADDRESS;
 try {
   const mod = await import(`${pathToFileURL(tmpChainMjs).href}?t=${Date.now()}`);
   VERIFIED_DEMO_CASES = mod.VERIFIED_DEMO_CASES;
+  MIRROR_JUDGE_ADDRESS = mod.MIRROR_JUDGE_ADDRESS;
 } finally {
   if (fs.existsSync(tmpChainMjs)) fs.unlinkSync(tmpChainMjs);
 }
@@ -225,7 +227,6 @@ try {
 
   for (const check of demoChecks) {
     const url = `${baseUrl}/#/app?case=${check.id}`;
-    // Navigate to about:blank first so previous case badge DOM is cleared before waiting
     await page.goto('about:blank', { timeout: 30000 });
     await page.goto(url, { timeout: 30000 });
     await page.waitForSelector(check.selector, { timeout: 20000 });
@@ -257,39 +258,52 @@ try {
     );
 
     if (check.key === 'DEMO_D') {
+      assert.ok(
+        snapshot.bodyText.includes('OPEN (Evidence reopened for Round 2)'),
+        `[DEMO_D] Expected UI to contain "OPEN (Evidence reopened for Round 2)"`
+      );
+      assert.equal(
+        snapshot.bodyText.includes('Verified Stable'),
+        false,
+        `[DEMO_D] Expected UI NOT to contain "Verified Stable"`
+      );
       const standaloneStable = snapshot.bodyText.match(/(?<!UN)STABLE/g) || [];
       assert.equal(
         standaloneStable.length,
         0,
         `[DEMO_D] Expected 0 standalone STABLE occurrences on page, found: ${JSON.stringify(standaloneStable)}`
       );
-      console.log(`PASS DEMO_D (${check.id}): 0 standalone STABLE occurrences on page (/(?<!UN)STABLE/)`);
+      console.log(
+        `PASS DEMO_D (${check.id}): shows "OPEN (Evidence reopened for Round 2)", 0 standalone STABLE occurrences, 0 "Verified Stable"`
+      );
 
-      const screenshotPath = path.join(docsDir, 'unstable_case_cbbed41fefc3.png');
+      const screenshotPath = path.join(docsDir, `unstable_case_${check.id}.png`);
       await page.screenshot({ path: screenshotPath });
 
-      const proofMarkdown = `# UI Verification Proof: On-Chain \`UNSTABLE\` Case (\`cbbed41fefc3\`)
+      const proofMarkdown = `# UI Verification Proof: On-Chain \`UNSTABLE\` Case (\`${check.id}\`)
 
 ## 1. On-Chain Case & RPC Coordinates
-- **Contract Address**: \`0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D\`
-- **Case ID**: \`cbbed41fefc3\`
+- **Contract Address**: \`${MIRROR_JUDGE_ADDRESS}\`
+- **Case ID**: \`${check.id}\`
 - **Title**: \`Cross-Border Escrow & SLA Addendum Attribution Dispute\`
-- **\`open_case\` Tx**: \`0xa3e30f86e5677c7b069b3c42bd2769a6f90e27570cca39c24a2017151e4ff2aa\`
-- **Party 1 \`add_evidence\` Tx**: \`0x1edb1ec2e78ab87cb4396d5548df6426ea47615f36ac4249f73455c9355b3bae\`
-- **Party 2 \`add_evidence\` Tx**: \`0xa4605d01bf0f17c5ca6264f75f355d9f4a351343058e69021a28eb94c774f8bd\`
-- **\`judge\` Tx**: \`0x8472dbad8e0bdc0f3049db16ca509e3b539a5d938b2bff5a389aff2d16e2c3a2\`
-- **RPC View Call**: \`get_certificate("cbbed41fefc3")\`
-- **Field Read**: \`current_decision = "UNSTABLE|NONE|UNSTABLE"\`, \`rounds[0].decision = "UNSTABLE|NONE|UNSTABLE"\`
+- **\`open_case\` Tx**: \`0xeb96d6421daac8e85e7648517452fae593ca15b6ab51e2c793b29b6569b0e00b\`
+- **Party 1 \`add_evidence\` Tx**: \`0xb77ac30acb220664c574941c463ac9b5d2899655baee3fe6e0ce1882056314f7\`
+- **Party 1 \`mark_ready\` Tx**: \`0xe83357fdf5e64f6062b7ebdb71a923c4a4289e320cf1a5dd0f8c0cead0574f29\`
+- **Party 2 \`add_evidence\` Tx**: \`0x90a35868f67391f5bd9d5284afc7008f87977e42c3f33f9031fe62626e7408c5\`
+- **Party 2 \`mark_ready\` Tx**: \`0xcf01f31e39c003de1a280b19dd0d1754c2fc57db455ddd353b463845beac5ef6\`
+- **\`judge\` Tx**: \`0xfd6a4e5acb7404ff8d060a5618246a98e535a66641e18fe23ffbe488c81b92de\`
+- **RPC View Call**: \`get_certificate("${check.id}")\`
+- **Field Read**: \`status = "OPEN"\`, \`current_decision = "UNSTABLE|NONE|UNSTABLE"\`, \`rounds[0].decision = "UNSTABLE|NONE|UNSTABLE"\`, \`ready = {"PARTY_1":false,"PARTY_2":false}\`
 
 ## 2. Rendered DOM Assertions (All 4 Demo Cases A, B, C, D)
-- **Demo A (\`0551168cd4f5\`)**: badge \`stable\` (\`STABLE\`), title \`STABLE CERTIFICATE\`
-- **Demo B (\`4e4a3aa372e6\`)**: badge \`insufficient\` (\`INSUFFICIENT EVIDENCE\`), title \`INSUFFICIENT EVIDENCE\`
-- **Demo C (\`8f128188b6c6\`)**: badge \`split\` (\`SPLIT VERDICT\`), title \`SPLIT DETERMINATION\`
-- **Demo D (\`cbbed41fefc3\`)**: badge \`unstable\` (\`${snapshot.badgeText}\`), title \`${snapshot.certificateTitle}\`
+- **Demo A (\`${VERIFIED_DEMO_CASES.DEMO_A.id}\`)**: badge \`stable\` (\`STABLE\`), title \`STABLE CERTIFICATE\`
+- **Demo B (\`${VERIFIED_DEMO_CASES.DEMO_B.id}\`)**: badge \`insufficient\` (\`INSUFFICIENT EVIDENCE\`), title \`INSUFFICIENT EVIDENCE\`
+- **Demo C (\`${VERIFIED_DEMO_CASES.DEMO_C.id}\`)**: badge \`split\` (\`SPLIT VERDICT\`), title \`SPLIT DETERMINATION\`
+- **Demo D (\`${check.id}\`)**: badge \`unstable\` (\`${snapshot.badgeText}\`), title \`${snapshot.certificateTitle}\`, status \`OPEN (Evidence reopened for Round 2)\`
 - **Standalone \`STABLE\` matches on Demo D page (\`/(?<!UN)STABLE/\`)**: \`0\`
-- **Screenshot**: \`docs/unstable_case_cbbed41fefc3.png\`
+- **Screenshot**: \`docs/unstable_case_${check.id}.png\`
 
-## 3. Captured Visible Text from Rendered Workbench (\`/#/app?case=cbbed41fefc3\`)
+## 3. Captured Visible Text from Rendered Workbench (\`/#/app?case=${check.id}\`)
 \`\`\`text
 ${snapshot.bodyText.trim()}
 \`\`\`
