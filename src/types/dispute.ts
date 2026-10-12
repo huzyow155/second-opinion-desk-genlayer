@@ -14,6 +14,13 @@ export interface RoundRecord {
   decision: string;
 }
 
+export type CaseStatus = 'OPEN' | 'CLOSED' | 'JUDGED' | 'FINAL';
+
+export interface PartyFlags {
+  PARTY_1: boolean;
+  PARTY_2: boolean;
+}
+
 export interface CaseRecord {
   schema_version: string;
   case_id: string;
@@ -28,7 +35,13 @@ export interface CaseRecord {
   max_rounds: number;
   evidence: EvidenceItem[];
   rounds: RoundRecord[];
-  status: 'OPEN' | 'JUDGED' | 'FINAL';
+  status: CaseStatus;
+  opened_at_ts: number;
+  evidence_deadline_ts: number;
+  ready: PartyFlags;
+  closed_at_ts: number;
+  judged_at_ts: number;
+  final_acks: PartyFlags;
 }
 
 export interface StabilityCertificate {
@@ -37,7 +50,13 @@ export interface StabilityCertificate {
   title: string;
   opener: string;
   opposing: string;
-  status: 'OPEN' | 'JUDGED' | 'FINAL';
+  status: CaseStatus;
+  opened_at_ts: number;
+  evidence_deadline_ts: number;
+  ready: PartyFlags;
+  closed_at_ts: number;
+  judged_at_ts: number;
+  final_acks: PartyFlags;
   config: {
     margin_bp: number;
     max_flips: number;
@@ -48,6 +67,23 @@ export interface StabilityCertificate {
   current_decision: string;
   is_decided: boolean;
   outcome: 'PARTY_1' | 'PARTY_2' | 'SPLIT' | 'NO_DECISION' | 'PENDING';
+}
+
+export interface LifecycleState {
+  schema_version: string;
+  case_id: string;
+  status: CaseStatus;
+  opened_at_ts: number;
+  evidence_deadline_ts: number;
+  ready: PartyFlags;
+  closed_at_ts: number;
+  judged_at_ts: number;
+  final_acks: PartyFlags;
+  rounds_used: number;
+  max_rounds: number;
+  evidence_window_seconds: number;
+  finalize_window_seconds: number;
+  next_actions: Record<string, { party?: string[]; consumer?: string[] }>;
 }
 
 export type ConsumerOutcome = 'PARTY_1' | 'PARTY_2' | 'SPLIT' | 'NO_DECISION' | 'PENDING';

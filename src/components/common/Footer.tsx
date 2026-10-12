@@ -22,11 +22,11 @@ export const Footer: React.FC = () => {
               <span className="font-bold text-[#eef0f2] tracking-tight">Second-Opinion Desk</span>
             </div>
             <p className="text-xs text-[#9fa5b0] leading-relaxed max-w-md">
-              A decentralized dispute adjudication workbench powered by MirrorJudge on GenLayer Studionet Preview.
-              Validates LLM position invariance via dual-pass canonical and mirrored evaluation under validator consensus.
+              A decentralized dispute adjudication workbench powered by MirrorJudge on GenLayer Studionet (Preview).
+              Enforces a 4-phase readiness and closing lifecycle (`OPEN -&gt; CLOSED -&gt; JUDGED -&gt; FINAL`) and dual-pass mirrored evaluation under validator consensus.
             </p>
             <div className="text-[11px] text-[#6c727d]">
-              Zero gas price network • Pure Python Intelligent Contracts on GenVM
+              Zero gas price network | Pure Python Intelligent Contracts on GenVM
             </div>
           </div>
 
@@ -44,7 +44,7 @@ export const Footer: React.FC = () => {
                   className="flex items-center gap-1.5 text-[#9fa5b0] hover:text-white transition"
                 >
                   <Shield className="w-3.5 h-3.5 text-stone-400" />
-                  <span>MirrorJudge Core</span>
+                  <span>MirrorJudge ({MIRROR_JUDGE_ADDRESS.slice(0, 6)}...{MIRROR_JUDGE_ADDRESS.slice(-4)})</span>
                   <ExternalLink className="w-3 h-3 text-[#6c727d]" />
                 </a>
               </li>
@@ -56,7 +56,7 @@ export const Footer: React.FC = () => {
                   className="flex items-center gap-1.5 text-[#9fa5b0] hover:text-white transition"
                 >
                   <Code className="w-3.5 h-3.5 text-stone-400" />
-                  <span>Consumer Settlement</span>
+                  <span>Consumer ({CONSUMER_CONTRACT_ADDRESS.slice(0, 6)}...{CONSUMER_CONTRACT_ADDRESS.slice(-4)})</span>
                   <ExternalLink className="w-3 h-3 text-[#6c727d]" />
                 </a>
               </li>
@@ -98,9 +98,9 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between text-xs text-[#6c727d] gap-2">
-          <span>Released under MIT License. GenLayer Studionet Preview (Chain ID 61999).</span>
+          <span>Released under MIT License. GenLayer Studionet (Preview) (Chain ID 61999).</span>
           <div className="flex items-center gap-4">
-            <span>Deterministic Dual-Pass Architecture</span>
+            <span>Deterministic Dual-Pass Architecture (Schema 2.0.0)</span>
           </div>
         </div>
       </div>

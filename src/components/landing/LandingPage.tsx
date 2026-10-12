@@ -17,9 +17,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
   const heroWordsLine2 = ['changed', 'its', 'mind', 'just', 'because'];
   const heroWordsLine3 = ['you', 'asked'];
 
-  // Viewport intersection observer for glyph text sweeps and container entrance
   useEffect(() => {
-    // 1. Observe glyph light sweeps (strictly typography-clipped)
     const sweepElements = document.querySelectorAll<HTMLElement>('.glyph-light-sweep, .text-sweep');
     const sweepObserver = new IntersectionObserver(
       (entries) => {
@@ -37,7 +35,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
     );
     sweepElements.forEach((el) => sweepObserver.observe(el));
 
-    // 2. Observe landing panels and cards for entrance transitions
     const revealElements = document.querySelectorAll<HTMLElement>('.landing-panel-reveal, .landing-card-reveal');
     const revealObserver = new IntersectionObserver(
       (entries) => {
@@ -68,11 +65,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
         <section className="text-center max-w-4xl mx-auto space-y-7 landing-panel-reveal revealed">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium silver-pill reveal-fade" style={{ '--reveal-delay': '100ms' } as React.CSSProperties}>
             <Sparkles className="w-3.5 h-3.5 text-stone-300" />
-            <span>Position-Invariant Adjudication on GenLayer Studionet Preview</span>
+            <span>Position-Invariant Adjudication on GenLayer Studionet (Preview)</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-extrabold text-[#eef0f2] tracking-tight leading-[1.12] sm:leading-[1.14]">
-            {/* Line 1: What if your on-chain judge */}
             <span className="block whitespace-normal sm:whitespace-nowrap mb-1.5 sm:mb-2">
               {heroWordsLine1.map((w, i) => (
                 <span
@@ -84,7 +80,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                 </span>
               ))}
             </span>
-            {/* Line 2: changed its mind just because */}
             <span className="block whitespace-normal sm:whitespace-nowrap mb-1.5 sm:mb-2">
               {heroWordsLine2.map((w, i) => (
                 <span
@@ -96,7 +91,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
                 </span>
               ))}
             </span>
-            {/* Line 3: you asked in reverse? */}
             <span className="block whitespace-normal sm:whitespace-nowrap">
               {heroWordsLine3.map((w, i) => (
                 <span
@@ -127,9 +121,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
 
           <p className="text-base sm:text-xl text-[#9fa5b0] max-w-2xl mx-auto leading-relaxed reveal-fade" style={{ '--reveal-delay': '250ms' } as React.CSSProperties}>
             Large language models are inherently vulnerable to position bias: swapping the order of
-            parties or evidence systematically flips verdicts. Second-Opinion Desk introduces
-            dual-pass mirrored adjudication, refusing to accept any verdict that cannot survive its
-            own mirror image.
+            parties or evidence systematically flips verdicts. Second-Opinion Desk enforces a 4-phase
+            readiness lifecycle and dual-pass mirrored adjudication, refusing to accept any verdict
+            that cannot survive its own mirror image.
           </p>
 
           <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-4 reveal-up" style={{ '--reveal-delay': '320ms' } as React.CSSProperties}>
@@ -184,19 +178,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
             <div className="silver-frame p-6 space-y-4 border-white/[0.18] landing-card-reveal" style={{ '--card-delay': '160ms' } as React.CSSProperties}>
               <div className="flex items-center gap-2 text-[#eef0f2] font-bold text-sm sm:text-base landing-item-title">
                 <div className="w-5 h-5 rounded-md bg-white/[0.12] text-white flex items-center justify-center text-xs">
-                  ✓
+                  OK
                 </div>
                 <span>MirrorJudge Dual-Pass Adjudication</span>
               </div>
               <p className="text-xs sm:text-sm text-[#9fa5b0] leading-relaxed landing-item-body">
                 Evaluates every dispute twice: first canonically, then mirrored (parties swapped, criteria
                 reversed, evidence shuffled). If the score delta exceeds the strict margin or criterion
-                decisions flip, the verdict is flagged as UNSTABLE.
+                decisions flip, the verdict is flagged as UNSTABLE and reopened for supplemental evidence.
               </p>
               <div className="p-3.5 bg-white/[0.04] border border-white/[0.12] rounded-xl text-xs sm:text-sm text-[#eef0f2] font-mono leading-relaxed landing-item-meta">
                 Canonical Pass: Party 1 Score = 72% <br />
-                Mirrored Pass: Party 1 Score = 71% &rarr; STABLE (&le;15% delta)
+                Mirrored Pass: Party 1 Score = 71% &rarr; Stable (&le;15% delta)
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* How to Try It: 4-Phase Lifecycle */}
+        <section className="silver-frame-inset p-8 sm:p-10 space-y-6 landing-panel-reveal">
+          <div className="max-w-2xl space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium silver-pill landing-item-meta">
+              <Zap className="w-3.5 h-3.5 text-stone-300" />
+              <span>Enforceable 4-Phase Protocol (Schema 2.0.0)</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2]">
+              <span className="glyph-light-sweep" data-text="How to Try It: Open -> Ready -> Judge -> Acknowledge -> Settle">
+                How to Try It: Open -&gt; Ready -&gt; Judge -&gt; Acknowledge -&gt; Settle
+              </span>
+            </h2>
+            <p className="text-sm sm:text-base text-[#9fa5b0] leading-relaxed landing-item-body">
+              Both parties have a defined 10-minute opportunity to submit evidence and declare readiness
+              before judging can be triggered by a party, and a 5-minute review window before closure to
+              FINAL and downstream settlement.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pt-2">
+            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs landing-card-reveal" style={{ '--card-delay': '60ms' } as React.CSSProperties}>
+              <div className="text-xs font-mono text-stone-300 font-bold mb-1 landing-item-title">01 / OPEN</div>
+              <div className="text-xs text-[#9fa5b0] landing-item-body">Open a case with weighted criteria (sum = 10,000 bp) and party aliases</div>
+            </div>
+            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs landing-card-reveal" style={{ '--card-delay': '110ms' } as React.CSSProperties}>
+              <div className="text-xs font-mono text-stone-300 font-bold mb-1 landing-item-title">02 / CLOSED</div>
+              <div className="text-xs text-[#9fa5b0] landing-item-body">Both parties add evidence and click Mark ready (or close after 10m window)</div>
+            </div>
+            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs landing-card-reveal" style={{ '--card-delay': '160ms' } as React.CSSProperties}>
+              <div className="text-xs font-mono text-stone-300 font-bold mb-1 landing-item-title">03 / JUDGED</div>
+              <div className="text-xs text-[#9fa5b0] landing-item-body">Either party triggers dual-pass mirrored judging on GenVM validators</div>
+            </div>
+            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs landing-card-reveal" style={{ '--card-delay': '210ms' } as React.CSSProperties}>
+              <div className="text-xs font-mono text-stone-300 font-bold mb-1 landing-item-title">04 / FINAL</div>
+              <div className="text-xs text-[#9fa5b0] landing-item-body">Both parties acknowledge the certificate (or 1 party after 5m review window)</div>
+            </div>
+            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs landing-card-reveal" style={{ '--card-delay': '260ms' } as React.CSSProperties}>
+              <div className="text-xs font-mono text-stone-300 font-bold mb-1 landing-item-title">05 / SETTLE</div>
+              <div className="text-xs text-[#9fa5b0] landing-item-body">Consumer contract reads FINAL outcome and executes single-settlement payout</div>
             </div>
           </div>
         </section>
@@ -243,49 +280,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
               </div>
               <h3 className="font-bold text-[#eef0f2] text-base sm:text-lg landing-item-title">GenLayer Validator Consensus</h3>
               <p className="text-xs sm:text-sm text-[#9fa5b0] leading-relaxed landing-item-body">
-                Conventional blockchains cannot run non-deterministic AI models. GenLayer’s GenVM validator
+                Conventional blockchains cannot run non-deterministic AI models. GenLayer&#39;s GenVM validator
                 consensus executes Intelligent Contracts across independent validators to reach verified state agreement.
               </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Why GenLayer Section */}
-        <section className="silver-frame-inset p-8 sm:p-10 space-y-6 landing-panel-reveal">
-          <div className="max-w-2xl space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium silver-pill landing-item-meta">
-              <Zap className="w-3.5 h-3.5 text-stone-300" />
-              <span>Infrastructure Architecture</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#eef0f2]">
-              <span className="glyph-light-sweep" data-text="Why GenLayer is Mandatory for MirrorJudge">
-                Why GenLayer is Mandatory for MirrorJudge
-              </span>
-            </h2>
-            <p className="text-sm sm:text-base text-[#9fa5b0] leading-relaxed landing-item-body">
-              Standard EVM smart contracts cannot read natural language or perform semantic reasoning.
-              Centralized oracle services introduce single points of failure. GenLayer solves this by
-              allowing Python intelligent contracts to call natural-language processing directly inside the
-              GenVM execution runtime, protected by validator majority consensus.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs landing-card-reveal" style={{ '--card-delay': '60ms' } as React.CSSProperties}>
-              <div className="text-xs font-mono text-stone-300 font-bold mb-1 landing-item-title">01 / GenVM Python</div>
-              <div className="text-xs text-[#9fa5b0] landing-item-body">Native Python execution runtime with pure string storage</div>
-            </div>
-            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs landing-card-reveal" style={{ '--card-delay': '120ms' } as React.CSSProperties}>
-              <div className="text-xs font-mono text-stone-300 font-bold mb-1 landing-item-title">02 / Dual-Pass Consensus</div>
-              <div className="text-xs text-[#9fa5b0] landing-item-body">Validators evaluate both passes before committing state</div>
-            </div>
-            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs landing-card-reveal" style={{ '--card-delay': '180ms' } as React.CSSProperties}>
-              <div className="text-xs font-mono text-stone-300 font-bold mb-1 landing-item-title">03 / Zero Gas Price</div>
-              <div className="text-xs text-[#9fa5b0] landing-item-body">Transactions use 0 gas price on Studionet Preview</div>
-            </div>
-            <div className="bg-[#121417]/90 p-4 rounded-xl border border-white/[0.08] shadow-xs landing-card-reveal" style={{ '--card-delay': '240ms' } as React.CSSProperties}>
-              <div className="text-xs font-mono text-stone-300 font-bold mb-1 landing-item-title">04 / Composable Consumer</div>
-              <div className="text-xs text-[#9fa5b0] landing-item-body">Downstream contracts read certificates to trigger automated settlements</div>
             </div>
           </div>
         </section>
@@ -298,7 +295,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLaunchApp }) => {
             </span>
           </h2>
           <p className="text-sm sm:text-base text-[#9fa5b0] max-w-lg mx-auto landing-item-body">
-            Browse real on-chain cases without a wallet, or connect to Studionet to open a fresh dispute.
+            Browse real on-chain cases without a wallet, or connect to GenLayer Studionet (Preview) to open a fresh dispute.
           </p>
           <div className="landing-item-meta pt-2">
             <button

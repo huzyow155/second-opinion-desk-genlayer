@@ -7,7 +7,12 @@ import {
   STUDIONET_RPC_URL,
   STUDIONET_EXPLORER_URL,
 } from '../config/chain';
-import type { CaseRecord, StabilityCertificate, ConsumerOutcome } from '../types/dispute';
+import type {
+  CaseRecord,
+  StabilityCertificate,
+  LifecycleState,
+  ConsumerOutcome,
+} from '../types/dispute';
 
 export const STUDIONET_CONFIG = chains?.studionet || {
   id: STUDIONET_CHAIN_ID,
@@ -66,9 +71,12 @@ export async function fetchCase(
   }
 }
 
-export async function fetchCertificate(caseId: string): Promise<ContractReadResult<StabilityCertificate>> {
+export async function fetchCertificate(
+  caseId: string,
+  client: any = publicClient
+): Promise<ContractReadResult<StabilityCertificate>> {
   try {
-    const raw: any = await publicClient.readContract({
+    const raw: any = await client.readContract({
       address: MIRROR_JUDGE_ADDRESS,
       functionName: 'get_certificate',
       args: [caseId],
@@ -80,6 +88,27 @@ export async function fetchCertificate(caseId: string): Promise<ContractReadResu
     return { ok: true, data };
   } catch (err: any) {
     console.error('fetchCertificate error:', err);
+    return { ok: false, error: err?.message || 'RPC communication error' };
+  }
+}
+
+export async function fetchLifecycle(
+  caseId: string,
+  client: any = publicClient
+): Promise<ContractReadResult<LifecycleState>> {
+  try {
+    const raw: any = await client.readContract({
+      address: MIRROR_JUDGE_ADDRESS,
+      functionName: 'get_lifecycle',
+      args: [caseId],
+    });
+    if (!raw || raw === '{}' || raw === '""' || raw === 'null') {
+      return { ok: true, data: null };
+    }
+    const data = typeof raw === 'string' ? JSON.parse(raw) : (raw as LifecycleState);
+    return { ok: true, data };
+  } catch (err: any) {
+    console.error('fetchLifecycle error:', err);
     return { ok: false, error: err?.message || 'RPC communication error' };
   }
 }
@@ -201,6 +230,28 @@ export async function executeAddEvidence(
     address: MIRROR_JUDGE_ADDRESS,
     functionName: 'add_evidence',
     args: [caseId, text],
+  });
+}
+
+export async function executeMarkReady(
+  writeClient: any,
+  caseId: string
+): Promise<string> {
+  return await writeClient.writeContract({
+    address: MIRROR_JUDGE_ADDRESS,
+    functionName: 'mark_ready',
+    args: [caseId],
+  });
+}
+
+export async function executeCloseEvidence(
+  writeClient: any,
+  caseId: string
+): Promise<string> {
+  return await writeClient.writeContract({
+    address: MIRROR_JUDGE_ADDRESS,
+    functionName: 'close_evidence',
+    args: [caseId],
   });
 }
 
@@ -410,7 +461,7 @@ export async function waitForReceiptWithProgress(
 // ---------------------------------------------------------------------------
 
 export async function verifyPostWriteState(
-  action: 'open' | 'evidence' | 'judge' | 'finalize' | 'settle',
+  action: 'open' | 'evidence' | 'ready' | 'close' | 'judge' | 'finalize' | 'settle',
   caseId: string,
   expected?: any
 ): Promise<{ verified: boolean; message: string; readData?: any }> {
@@ -436,6 +487,40 @@ export async function verifyPostWriteState(
     return { verified: false, message: 'Evidence not confirmed in case record after add_evidence write.' };
   }
 
+  if (action === 'ready') {
+    const res = await fetchCase(caseId);
+    if (res.ok && res.data) {
+      const pk: 'PARTY_1' | 'PARTY_2' | undefined = expected?.partyKey;
+      const partyReady = pk
+        ? res.data.ready?.[pk] === true
+        : res.data.ready?.PARTY_1 === true || res.data.ready?.PARTY_2 === true;
+      const statusOk = expected?.expectClosed ? res.data.status === 'CLOSED' : true;
+      if ((partyReady || res.data.status === 'CLOSED') && statusOk) {
+        return {
+          verified: true,
+          message:
+            res.data.status === 'CLOSED'
+              ? 'Both parties ready; evidence phase confirmed CLOSED on-chain.'
+              : `Party readiness confirmed on-chain (status: ${res.data.status}).`,
+          readData: res.data,
+        };
+      }
+    }
+    return { verified: false, message: 'Party readiness not confirmed on-chain after mark_ready write.' };
+  }
+
+  if (action === 'close') {
+    const res = await fetchCase(caseId);
+    if (res.ok && res.data && res.data.status === 'CLOSED') {
+      return {
+        verified: true,
+        message: 'Evidence window closed on-chain (status: CLOSED).',
+        readData: res.data,
+      };
+    }
+    return { verified: false, message: 'Status CLOSED not confirmed after close_evidence write.' };
+  }
+
   if (action === 'judge') {
     const res = await fetchCertificate(caseId);
     if (res.ok && res.data) {
@@ -444,7 +529,7 @@ export async function verifyPostWriteState(
         const lastRound = res.data.rounds ? res.data.rounds[roundsCount - 1] : undefined;
         return {
           verified: true,
-          message: `Adjudication round #${roundsCount} confirmed on-chain (${lastRound?.decision || res.data.current_decision}).`,
+          message: `Adjudication round #${roundsCount} confirmed on-chain (${lastRound?.decision || res.data.current_decision}, status: ${res.data.status}).`,
           readData: res.data,
         };
       }
@@ -454,10 +539,27 @@ export async function verifyPostWriteState(
 
   if (action === 'finalize') {
     const res = await fetchCase(caseId);
-    if (res.ok && res.data && res.data.status === 'FINAL') {
-      return { verified: true, message: 'Dispute status confirmed as FINAL on-chain.', readData: res.data };
+    if (res.ok && res.data) {
+      const pk: 'PARTY_1' | 'PARTY_2' | undefined = expected?.partyKey;
+      const ackOk = pk
+        ? res.data.final_acks?.[pk] === true
+        : res.data.final_acks?.PARTY_1 === true || res.data.final_acks?.PARTY_2 === true;
+      const bothAcked = res.data.final_acks?.PARTY_1 === true && res.data.final_acks?.PARTY_2 === true;
+      const expectFinal = expected?.expectFinal === true || bothAcked;
+      const statusOk = expectFinal ? res.data.status === 'FINAL' : res.data.status === 'JUDGED' || res.data.status === 'FINAL';
+
+      if (ackOk && statusOk) {
+        return {
+          verified: true,
+          message:
+            res.data.status === 'FINAL'
+              ? 'Dispute status confirmed as FINAL on-chain.'
+              : 'Party acknowledgment recorded on-chain (status: JUDGED, awaiting counterparty or review window).',
+          readData: res.data,
+        };
+      }
     }
-    return { verified: false, message: 'Status FINAL not confirmed after finalize write.' };
+    return { verified: false, message: 'Acknowledgment / FINAL state not confirmed after finalize write.' };
   }
 
   if (action === 'settle') {

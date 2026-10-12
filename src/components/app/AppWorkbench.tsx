@@ -3,6 +3,7 @@ import { useWallet } from '../../context/WalletContext';
 import {
   fetchCase,
   fetchCertificate,
+  fetchLifecycle,
   fetchOutcomeForConsumer,
   fetchCasesByParty,
   fetchLatestCaseForPair,
@@ -10,6 +11,8 @@ import {
   fetchConsumerSettlement,
   executeOpenCase,
   executeAddEvidence,
+  executeMarkReady,
+  executeCloseEvidence,
   executeJudge,
   executeFinalize,
   executeConsumerSettle,
@@ -18,11 +21,18 @@ import {
   getWriteClient,
 } from '../../services/contractService';
 import {
-  CONSUMER_CONTRACT_ADDRESS,
   VERIFIED_DEMO_CASES,
   STUDIONET_NAME,
+  EVIDENCE_WINDOW_SECONDS,
+  FINALIZE_WINDOW_SECONDS,
 } from '../../config/chain';
-import type { CaseRecord, StabilityCertificate, Criterion } from '../../types/dispute';
+import type {
+  CaseRecord,
+  StabilityCertificate,
+  LifecycleState,
+  Criterion,
+  CaseStatus,
+} from '../../types/dispute';
 import { parseDecision } from '../../utils/decisionParser';
 import { WaitingStateModal } from '../common/WaitingStateModal';
 import {
@@ -37,14 +47,28 @@ import {
   RefreshCw,
   Building,
   ArrowRightLeft,
-  ChevronRight,
   Info,
   ChevronDown,
   ChevronUp,
   User,
-  ShieldCheck,
-  Search,
+  Lock,
 } from 'lucide-react';
+
+function formatCountdown(remainingSec: number): string {
+  if (remainingSec <= 0) return '00:00';
+  const mins = Math.floor(remainingSec / 60);
+  const secs = remainingSec % 60;
+  return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+function formatUtcTimestamp(ts: number): string {
+  if (!ts || ts <= 0) return 'N/A';
+  try {
+    return new Date(ts * 1000).toISOString().replace('.000Z', ' UTC');
+  } catch {
+    return `${ts}`;
+  }
+}
 
 export const AppWorkbench: React.FC = () => {
   const {
@@ -69,16 +93,26 @@ export const AppWorkbench: React.FC = () => {
   const [inspectedCaseId, setInspectedCaseId] = useState<string>(getInitialCaseId);
   const [caseRecord, setCaseRecord] = useState<CaseRecord | null>(null);
   const [certificate, setCertificate] = useState<StabilityCertificate | null>(null);
+  const [lifecycle, setLifecycle] = useState<LifecycleState | null>(null);
   const [consumerOutcome, setConsumerOutcome] = useState<string>('');
   const [consumerSettlement, setConsumerSettlement] = useState<string>('');
   const [loadingCase, setLoadingCase] = useState<boolean>(false);
   const [caseLoadError, setCaseLoadError] = useState<string | null>(null);
   const [caseErrorType, setCaseErrorType] = useState<'not_found' | 'network' | null>(null);
 
+  // Real-time clock for countdown display
+  const [nowSec, setNowSec] = useState<number>(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    const id = setInterval(() => {
+      setNowSec(Math.floor(Date.now() / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
   // Discovery lists
   const [recentGlobalCases, setRecentGlobalCases] = useState<string[]>([]);
-  const [userCases, setUserCases] = useState<string[]>([]);
-  const [refreshingList, setRefreshingList] = useState<boolean>(false);
+  const [, setUserCases] = useState<string[]>([]);
+  const [, setRefreshingList] = useState<boolean>(false);
 
   // Waiting modal state
   const [waitingModalOpen, setWaitingModalOpen] = useState<boolean>(false);
@@ -124,20 +158,25 @@ export const AppWorkbench: React.FC = () => {
     setCaseErrorType(null);
 
     try {
-      const [cRecordRes, certRes, cOutcomeRes, cSettleRes] = await Promise.all([
+      const [cRecordRes, certRes, lcRes, cOutcomeRes, cSettleRes] = await Promise.all([
         fetchCase(cleanId),
         fetchCertificate(cleanId),
+        fetchLifecycle(cleanId),
         fetchOutcomeForConsumer(cleanId),
         fetchConsumerSettlement(cleanId),
       ]);
 
       // 1. Check for network / RPC transport failure
       if (!cRecordRes.ok || !certRes.ok) {
-        const detail = (!cRecordRes.ok ? cRecordRes.error : '') || (!certRes.ok ? certRes.error : '') || 'RPC communication error';
+        const detail =
+          (!cRecordRes.ok ? cRecordRes.error : '') ||
+          (!certRes.ok ? certRes.error : '') ||
+          'RPC communication error';
         setCaseLoadError(`Couldn't reach Studionet, try again (${detail})`);
         setCaseErrorType('network');
         setCaseRecord(null);
         setCertificate(null);
+        setLifecycle(null);
         return;
       }
 
@@ -147,6 +186,7 @@ export const AppWorkbench: React.FC = () => {
         setCaseErrorType('not_found');
         setCaseRecord(null);
         setCertificate(null);
+        setLifecycle(null);
         return;
       }
 
@@ -156,7 +196,8 @@ export const AppWorkbench: React.FC = () => {
       setInspectedCaseId(cleanId);
       setCaseRecord(cRecordRes.data);
       setCertificate(certRes.data);
-      setConsumerOutcome(cOutcomeRes.ok && cOutcomeRes.data ? cOutcomeRes.data : 'NO_DECISION');
+      setLifecycle(lcRes.ok ? lcRes.data : null);
+      setConsumerOutcome(cOutcomeRes.ok && cOutcomeRes.data ? cOutcomeRes.data : 'PENDING');
       setConsumerSettlement(cSettleRes.ok && cSettleRes.data ? cSettleRes.data : '');
       setEvidenceCaseId(cleanId);
     } catch (err: any) {
@@ -171,6 +212,16 @@ export const AppWorkbench: React.FC = () => {
   useEffect(() => {
     loadCaseData(getInitialCaseId());
     refreshDiscoveryLists();
+  }, [loadCaseData]);
+
+  // Listen to URL hash query changes (e.g. /#/app?case=...)
+  useEffect(() => {
+    const onHashChange = () => {
+      const nextId = getInitialCaseId();
+      if (nextId) loadCaseData(nextId);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
   }, [loadCaseData]);
 
   // When account changes, refresh user's cases
@@ -222,13 +273,38 @@ export const AppWorkbench: React.FC = () => {
   const totalCriteriaWeight = criteria.reduce((sum, c) => sum + (Number(c.weight_bp) || 0), 0);
 
   // Compute connected wallet role in the currently inspected case
-  const currentRole = (() => {
+  const currentRole: 'PARTY_1' | 'PARTY_2' | 'OBSERVER' = (() => {
     if (!account || !caseRecord) return 'OBSERVER';
     const normAcc = account.toLowerCase();
     if (caseRecord.opener?.toLowerCase() === normAcc) return 'PARTY_1';
     if (caseRecord.opposing?.toLowerCase() === normAcc) return 'PARTY_2';
     return 'OBSERVER';
   })();
+
+  const isParty = currentRole === 'PARTY_1' || currentRole === 'PARTY_2';
+  const activeStatus: CaseStatus = (certificate?.status || caseRecord?.status || lifecycle?.status || 'OPEN') as CaseStatus;
+
+  const readyFlags = certificate?.ready || caseRecord?.ready || lifecycle?.ready || { PARTY_1: false, PARTY_2: false };
+  const finalAcks = certificate?.final_acks || caseRecord?.final_acks || lifecycle?.final_acks || { PARTY_1: false, PARTY_2: false };
+  const evidenceDeadlineTs = certificate?.evidence_deadline_ts || caseRecord?.evidence_deadline_ts || lifecycle?.evidence_deadline_ts || 0;
+  const judgedAtTs = certificate?.judged_at_ts || caseRecord?.judged_at_ts || lifecycle?.judged_at_ts || 0;
+  const finalizeDeadlineTs = judgedAtTs > 0 ? judgedAtTs + FINALIZE_WINDOW_SECONDS : 0;
+
+  const p1EvidenceCount = (caseRecord?.evidence || []).filter((e) => e.by === 'PARTY_1').length;
+  const p2EvidenceCount = (caseRecord?.evidence || []).filter((e) => e.by === 'PARTY_2').length;
+  const totalEvidenceCount = (caseRecord?.evidence || []).length;
+  const myEvidenceCount = currentRole === 'PARTY_1' ? p1EvidenceCount : currentRole === 'PARTY_2' ? p2EvidenceCount : 0;
+  const myReady = currentRole === 'PARTY_1' ? readyFlags.PARTY_1 : currentRole === 'PARTY_2' ? readyFlags.PARTY_2 : false;
+  const myFinalAck = currentRole === 'PARTY_1' ? finalAcks.PARTY_1 : currentRole === 'PARTY_2' ? finalAcks.PARTY_2 : false;
+  const otherFinalAck = currentRole === 'PARTY_1' ? finalAcks.PARTY_2 : currentRole === 'PARTY_2' ? finalAcks.PARTY_1 : false;
+
+  const evidenceRemainingSec = evidenceDeadlineTs > 0 ? evidenceDeadlineTs - nowSec : 0;
+  const evidenceWindowExpired = evidenceDeadlineTs > 0 && nowSec >= evidenceDeadlineTs;
+  const finalizeRemainingSec = finalizeDeadlineTs > 0 ? finalizeDeadlineTs - nowSec : 0;
+  const finalizeWindowExpired = finalizeDeadlineTs > 0 && nowSec >= finalizeDeadlineTs;
+
+  const roundsCount = certificate?.rounds?.length || caseRecord?.rounds?.length || 0;
+  const isReopenedRound = activeStatus === 'OPEN' && roundsCount > 0;
 
   // -------------------------------------------------------------------------
   // WRITE ACTION: Open Case
@@ -295,7 +371,7 @@ export const AppWorkbench: React.FC = () => {
       );
       setCurrentTxHash(txHash);
 
-      const { receipt, success, durationSec } = await waitForReceiptWithProgress(
+      const { receipt, success, durationSec, errorReason } = await waitForReceiptWithProgress(
         writeClient,
         txHash,
         (s) => setWaitingElapsedSeconds(s)
@@ -305,11 +381,10 @@ export const AppWorkbench: React.FC = () => {
 
       if (!success) {
         throw new Error(
-          `Transaction completed with status ${receipt?.status_name || 'UNKNOWN'}. Execution failed.`
+          errorReason || `Transaction completed with status ${receipt?.status_name || 'UNKNOWN'}. Execution failed.`
         );
       }
 
-      // DISCOVERY VIEW LOOKUP (Rule #4: Never calculate hash locally)
       const pairRes = await fetchLatestCaseForPair(account, opposingAddress.trim());
       const discoveredCaseId = pairRes.ok && pairRes.data ? pairRes.data : null;
 
@@ -320,7 +395,7 @@ export const AppWorkbench: React.FC = () => {
         }
 
         setOpenSuccessMsg(
-          `Case opened in ${durationSec}s! Discovered on-chain ID: ${discoveredCaseId}`
+          `Case opened in ${durationSec}s (10-minute evidence window started). Case ID: ${discoveredCaseId}`
         );
 
         setInspectedCaseId(discoveredCaseId);
@@ -377,7 +452,7 @@ export const AppWorkbench: React.FC = () => {
       const txHash = await executeAddEvidence(writeClient, evidenceCaseId.trim(), evidenceText.trim());
       setCurrentTxHash(txHash);
 
-      const { receipt, success, durationSec } = await waitForReceiptWithProgress(
+      const { receipt, success, durationSec, errorReason } = await waitForReceiptWithProgress(
         writeClient,
         txHash,
         (s) => setWaitingElapsedSeconds(s)
@@ -386,7 +461,7 @@ export const AppWorkbench: React.FC = () => {
       setWaitingModalOpen(false);
 
       if (!success) {
-        throw new Error(`Evidence submission failed with status ${receipt?.status_name || 'UNKNOWN'}`);
+        throw new Error(errorReason || `Evidence submission failed with status ${receipt?.status_name || 'UNKNOWN'}`);
       }
 
       const verifyRes = await verifyPostWriteState('evidence', evidenceCaseId.trim());
@@ -394,12 +469,110 @@ export const AppWorkbench: React.FC = () => {
         throw new Error(`Evidence transaction succeeded, but post-write state verification failed: ${verifyRes.message}`);
       }
 
-      setEvidenceSuccessMsg(`Evidence accepted by validators in ${durationSec}s.`);
+      setEvidenceSuccessMsg(`Evidence accepted by validators in ${durationSec}s. Mark ready when finished.`);
       setEvidenceText('');
       await loadCaseData(evidenceCaseId.trim());
     } catch (err: any) {
       setWaitingModalOpen(false);
       setEvidenceError(err.message || 'Failed to submit evidence');
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // WRITE ACTION: Mark Ready
+  // -------------------------------------------------------------------------
+  const handleMarkReady = async (caseId: string) => {
+    setActionError(null);
+    setActionSuccessMsg(null);
+
+    if (!isConnected || !account || !selectedProvider) {
+      setActionError('Please connect your browser wallet first.');
+      return;
+    }
+
+    try {
+      const writeClient = getWriteClient(account, selectedProvider);
+
+      setWaitingModalTitle('Declaring Evidence Readiness');
+      setWaitingModalStage('Submitting mark_ready transaction to Studionet...');
+      setWaitingElapsedSeconds(0);
+      setWaitingModalOpen(true);
+
+      const txHash = await executeMarkReady(writeClient, caseId);
+      setCurrentTxHash(txHash);
+
+      const { receipt, success, durationSec, errorReason } = await waitForReceiptWithProgress(
+        writeClient,
+        txHash,
+        (s) => setWaitingElapsedSeconds(s)
+      );
+
+      setWaitingModalOpen(false);
+
+      if (!success) {
+        throw new Error(errorReason || `mark_ready failed with status ${receipt?.status_name || 'UNKNOWN'}`);
+      }
+
+      const verifyRes = await verifyPostWriteState('ready', caseId, {
+        partyKey: currentRole === 'PARTY_1' || currentRole === 'PARTY_2' ? currentRole : undefined,
+      });
+      if (!verifyRes.verified) {
+        throw new Error(`mark_ready succeeded, but post-write state verification failed: ${verifyRes.message}`);
+      }
+
+      setActionSuccessMsg(`${verifyRes.message} (${durationSec}s)`);
+      await loadCaseData(caseId);
+    } catch (err: any) {
+      setWaitingModalOpen(false);
+      setActionError(err.message || 'Failed to mark ready');
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // WRITE ACTION: Close Evidence (After Deadline)
+  // -------------------------------------------------------------------------
+  const handleCloseEvidence = async (caseId: string) => {
+    setActionError(null);
+    setActionSuccessMsg(null);
+
+    if (!isConnected || !account || !selectedProvider) {
+      setActionError('Please connect your browser wallet first.');
+      return;
+    }
+
+    try {
+      const writeClient = getWriteClient(account, selectedProvider);
+
+      setWaitingModalTitle('Closing Evidence Window');
+      setWaitingModalStage('Submitting close_evidence transaction after window deadline...');
+      setWaitingElapsedSeconds(0);
+      setWaitingModalOpen(true);
+
+      const txHash = await executeCloseEvidence(writeClient, caseId);
+      setCurrentTxHash(txHash);
+
+      const { receipt, success, durationSec, errorReason } = await waitForReceiptWithProgress(
+        writeClient,
+        txHash,
+        (s) => setWaitingElapsedSeconds(s)
+      );
+
+      setWaitingModalOpen(false);
+
+      if (!success) {
+        throw new Error(errorReason || `close_evidence failed with status ${receipt?.status_name || 'UNKNOWN'}`);
+      }
+
+      const verifyRes = await verifyPostWriteState('close', caseId);
+      if (!verifyRes.verified) {
+        throw new Error(`close_evidence succeeded, but post-write state verification failed: ${verifyRes.message}`);
+      }
+
+      setActionSuccessMsg(`Evidence window closed in ${durationSec}s (status: CLOSED). Ready for judging.`);
+      await loadCaseData(caseId);
+    } catch (err: any) {
+      setWaitingModalOpen(false);
+      setActionError(err.message || 'Failed to close evidence');
     }
   };
 
@@ -426,7 +599,7 @@ export const AppWorkbench: React.FC = () => {
       const txHash = await executeJudge(writeClient, caseId);
       setCurrentTxHash(txHash);
 
-      const { receipt, success, durationSec } = await waitForReceiptWithProgress(
+      const { receipt, success, durationSec, errorReason } = await waitForReceiptWithProgress(
         writeClient,
         txHash,
         (s) => setWaitingElapsedSeconds(s)
@@ -435,7 +608,7 @@ export const AppWorkbench: React.FC = () => {
       setWaitingModalOpen(false);
 
       if (!success) {
-        throw new Error(`Judge execution failed with status ${receipt?.status_name || 'UNKNOWN'}`);
+        throw new Error(errorReason || `Judge execution failed with status ${receipt?.status_name || 'UNKNOWN'}`);
       }
 
       const verifyRes = await verifyPostWriteState('judge', caseId);
@@ -444,7 +617,7 @@ export const AppWorkbench: React.FC = () => {
       }
 
       setActionSuccessMsg(
-        `Dual-pass adjudication accepted by validators in ${durationSec}s! Certificate refreshed.`
+        `Dual-pass adjudication accepted by validators in ${durationSec}s! ${verifyRes.message}`
       );
       await loadCaseData(caseId);
     } catch (err: any) {
@@ -454,7 +627,7 @@ export const AppWorkbench: React.FC = () => {
   };
 
   // -------------------------------------------------------------------------
-  // WRITE ACTION: Finalize Case
+  // WRITE ACTION: Finalize (Acknowledge & Close) Case
   // -------------------------------------------------------------------------
   const handleFinalizeCase = async (caseId: string) => {
     setActionError(null);
@@ -468,15 +641,15 @@ export const AppWorkbench: React.FC = () => {
     try {
       const writeClient = getWriteClient(account, selectedProvider);
 
-      setWaitingModalTitle('Closing Dispute');
-      setWaitingModalStage('Writing closed status to Studionet...');
+      setWaitingModalTitle('Acknowledging Verdict & Closing Case');
+      setWaitingModalStage('Submitting finalize transaction to Studionet...');
       setWaitingElapsedSeconds(0);
       setWaitingModalOpen(true);
 
       const txHash = await executeFinalize(writeClient, caseId);
       setCurrentTxHash(txHash);
 
-      const { receipt, success, durationSec } = await waitForReceiptWithProgress(
+      const { receipt, success, durationSec, errorReason } = await waitForReceiptWithProgress(
         writeClient,
         txHash,
         (s) => setWaitingElapsedSeconds(s)
@@ -485,19 +658,21 @@ export const AppWorkbench: React.FC = () => {
       setWaitingModalOpen(false);
 
       if (!success) {
-        throw new Error(`Finalize failed with status ${receipt?.status_name || 'UNKNOWN'}`);
+        throw new Error(errorReason || `Finalize failed with status ${receipt?.status_name || 'UNKNOWN'}`);
       }
 
-      const verifyRes = await verifyPostWriteState('finalize', caseId);
+      const verifyRes = await verifyPostWriteState('finalize', caseId, {
+        partyKey: currentRole === 'PARTY_1' || currentRole === 'PARTY_2' ? currentRole : undefined,
+      });
       if (!verifyRes.verified) {
         throw new Error(`Finalize transaction succeeded, but post-write state verification failed: ${verifyRes.message}`);
       }
 
-      setActionSuccessMsg(`Case closed and marked FINAL in ${durationSec}s.`);
+      setActionSuccessMsg(`${verifyRes.message} (${durationSec}s)`);
       await loadCaseData(caseId);
     } catch (err: any) {
       setWaitingModalOpen(false);
-      setActionError(err.message || 'Finalize failed');
+      setActionError(err.message || 'Acknowledge & close failed');
     }
   };
 
@@ -524,7 +699,7 @@ export const AppWorkbench: React.FC = () => {
       const txHash = await executeConsumerSettle(writeClient, caseId);
       setCurrentTxHash(txHash);
 
-      const { receipt, success, durationSec } = await waitForReceiptWithProgress(
+      const { receipt, success, durationSec, errorReason } = await waitForReceiptWithProgress(
         writeClient,
         txHash,
         (s) => setWaitingElapsedSeconds(s)
@@ -533,7 +708,7 @@ export const AppWorkbench: React.FC = () => {
       setWaitingModalOpen(false);
 
       if (!success) {
-        throw new Error(`Consumer settlement failed with status ${receipt?.status_name || 'UNKNOWN'}`);
+        throw new Error(errorReason || `Consumer settlement failed with status ${receipt?.status_name || 'UNKNOWN'}`);
       }
 
       const verifyRes = await verifyPostWriteState('settle', caseId);
@@ -605,6 +780,49 @@ export const AppWorkbench: React.FC = () => {
 
   const activeDecision = certificate?.current_decision || caseRecord?.rounds?.slice(-1)[0]?.decision || '';
 
+  // Compute why Add Evidence might be disabled
+  const addEvidenceDisabledReason = (() => {
+    if (!isConnected) return 'Connect your browser wallet to submit evidence.';
+    if (!isParty) return 'Read-only observer view: only Party 1 (Opener) or Party 2 (Opposing) may submit evidence.';
+    if (activeStatus !== 'OPEN') return `Evidence submission is closed because the case is in ${activeStatus} status.`;
+    if (myReady) return 'You have already marked ready for this round; evidence is locked unless an UNSTABLE round reopens the case.';
+    if (evidenceWindowExpired) return 'The 10-minute evidence window has expired; either party may now click Close evidence.';
+    if (myEvidenceCount >= 3) return 'Maximum of 3 evidence entries reached for your party.';
+    return null;
+  })();
+
+  const canMarkReady =
+    isConnected &&
+    isParty &&
+    activeStatus === 'OPEN' &&
+    !myReady &&
+    myEvidenceCount >= 1 &&
+    !evidenceWindowExpired;
+
+  const canCloseEvidence =
+    isConnected &&
+    isParty &&
+    activeStatus === 'OPEN' &&
+    evidenceWindowExpired &&
+    totalEvidenceCount >= 1;
+
+  const canJudge = isConnected && isParty && activeStatus === 'CLOSED';
+
+  const canFinalize =
+    isConnected &&
+    isParty &&
+    activeStatus === 'JUDGED' &&
+    (!myFinalAck || finalizeWindowExpired);
+
+  const canSettleConsumer = isConnected && activeStatus === 'FINAL' && !consumerSettlement;
+
+  const lifecycleSteps: Array<{ key: CaseStatus; title: string; subtitle: string }> = [
+    { key: 'OPEN', title: 'OPEN', subtitle: 'Evidence & Readiness' },
+    { key: 'CLOSED', title: 'CLOSED', subtitle: 'Ready for Judging' },
+    { key: 'JUDGED', title: 'JUDGED', subtitle: 'Review & Acknowledge' },
+    { key: 'FINAL', title: 'FINAL', subtitle: 'Closed & Settleable' },
+  ];
+
   return (
     <div className="min-h-screen py-6 sm:py-10">
       {/* Waiting State Modal */}
@@ -630,7 +848,7 @@ export const AppWorkbench: React.FC = () => {
               </span>
             </div>
             <p className="text-xs sm:text-sm text-[#9fa5b0] reveal-fade" style={{ '--reveal-delay': '160ms' } as React.CSSProperties}>
-              MirrorJudge does not require a payment value for case creation, evidence, or adjudication.
+              How to try it: Open -&gt; Add evidence &amp; Mark ready -&gt; Judge -&gt; Acknowledge -&gt; Settle on Consumer.
             </p>
           </div>
 
@@ -717,7 +935,7 @@ export const AppWorkbench: React.FC = () => {
             {activeTab === 'cases' && (
               <div className="silver-frame p-5 space-y-4 motion-panel">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-[#eef0f2] text-sm sm:text-base">On-Chain Demos</h3>
+                  <h3 className="font-bold text-[#eef0f2] text-sm sm:text-base">On-Chain Demos (Schema 2.0.0)</h3>
                   <span className="silver-pill text-[11px] font-semibold px-2 py-0.5 rounded-md text-stone-300 motion-badge">
                     No Wallet Required
                   </span>
@@ -736,17 +954,17 @@ export const AppWorkbench: React.FC = () => {
                     style={{ '--reveal-delay': '60ms' } as React.CSSProperties}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-stone-300">Demo A</span>
+                      <span className="text-xs font-bold text-stone-300">Demo A (Both Ready + Dual Ack)</span>
                       <span className="text-[10px] font-mono text-[#6c727d]">
                         {VERIFIED_DEMO_CASES.DEMO_A.id}
                       </span>
                     </div>
                     <div className="text-xs sm:text-[13px] text-[#9fa5b0] mb-2">
-                      Clear-cut milestone delivery verified via git logs.
+                      Both parties mark ready -&gt; CLOSED -&gt; judge -&gt; both acknowledge -&gt; FINAL (SETTLED_PARTY_1).
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono font-semibold text-emerald-400 motion-badge">
-                        DECIDED · PARTY 1
+                        FINAL | DECIDED | PARTY 1
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
                     </div>
@@ -763,17 +981,17 @@ export const AppWorkbench: React.FC = () => {
                     style={{ '--reveal-delay': '140ms' } as React.CSSProperties}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-stone-300">Demo B</span>
+                      <span className="text-xs font-bold text-stone-300">Demo B (10m Timeout Close)</span>
                       <span className="text-[10px] font-mono text-[#6c727d]">
                         {VERIFIED_DEMO_CASES.DEMO_B.id}
                       </span>
                     </div>
                     <div className="text-xs sm:text-[13px] text-[#9fa5b0] mb-2">
-                      Missing counterparty evidence resolved deterministically without LLM bias.
+                      Party 2 silent across 600s window -&gt; close_evidence -&gt; INSUFFICIENT -&gt; FINAL (ESCALATED).
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono font-semibold text-blue-400 motion-badge">
-                        INSUFFICIENT · NONE
+                        FINAL | INSUFFICIENT | NONE
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
                     </div>
@@ -790,17 +1008,17 @@ export const AppWorkbench: React.FC = () => {
                     style={{ '--reveal-delay': '220ms' } as React.CSSProperties}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-stone-300">Demo C</span>
+                      <span className="text-xs font-bold text-stone-300">Demo C (5m Review Window Close)</span>
                       <span className="text-[10px] font-mono text-[#6c727d]">
                         {VERIFIED_DEMO_CASES.DEMO_C.id}
                       </span>
                     </div>
                     <div className="text-xs sm:text-[13px] text-[#9fa5b0] mb-2">
-                      Balanced deliverable landing within tolerance threshold.
+                      Balanced SLA claims -&gt; SPLIT verdict -&gt; 1 party ack + 300s review window -&gt; FINAL (SETTLED_SPLIT).
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono font-semibold text-amber-400 motion-badge">
-                        DECIDED · SPLIT
+                        FINAL | DECIDED | SPLIT
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
                     </div>
@@ -817,17 +1035,17 @@ export const AppWorkbench: React.FC = () => {
                     style={{ '--reveal-delay': '260ms' } as React.CSSProperties}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-stone-300">Demo D</span>
+                      <span className="text-xs font-bold text-stone-300">Demo D (Unstable -&gt; Reopened)</span>
                       <span className="text-[10px] font-mono text-[#6c727d]">
                         {VERIFIED_DEMO_CASES.DEMO_D.id}
                       </span>
                     </div>
                     <div className="text-xs sm:text-[13px] text-[#9fa5b0] mb-2">
-                      Ambiguous addendum attribution where canonical and mirrored passes diverge.
+                      Canonical and mirrored passes diverge -&gt; UNSTABLE -&gt; auto-reopened to OPEN for Round 2.
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-mono font-semibold text-rose-400 motion-badge">
-                        UNSTABLE · NONE · UNSTABLE
+                        OPEN (Round 2) | UNSTABLE
                       </span>
                       <span className="text-[11px] text-stone-300 underline font-medium">Inspect</span>
                     </div>
@@ -884,7 +1102,7 @@ export const AppWorkbench: React.FC = () => {
                 <div className="space-y-1 stagger-item" style={{ '--reveal-delay': '40ms' } as React.CSSProperties}>
                   <h3 className="font-bold text-[#eef0f2] text-sm sm:text-base">Open Dispute Case</h3>
                   <p className="text-xs text-[#9fa5b0]">
-                    Configures weighted criteria and deterministic aliases for Party 1 &amp; Party 2.
+                    Configures weighted criteria, party aliases, and starts a {EVIDENCE_WINDOW_SECONDS / 60}-minute evidence window.
                   </p>
                 </div>
 
@@ -960,7 +1178,7 @@ export const AppWorkbench: React.FC = () => {
                   <div className="space-y-2 pt-2 border-t border-white/[0.08] stagger-item" style={{ '--reveal-delay': '200ms' } as React.CSSProperties}>
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-medium text-[#eef0f2]">
-                        Criteria ({criteria.length}/4) ·{' '}
+                        Criteria ({criteria.length}/4) |{' '}
                         <span className={`px-2 py-0.5 rounded-md font-mono font-bold text-xs criteria-total-badge ${
                           totalCriteriaWeight === 10000
                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
@@ -1045,83 +1263,138 @@ export const AppWorkbench: React.FC = () => {
               </form>
             )}
 
-            {/* TAB 3: ADD EVIDENCE */}
+            {/* TAB 3: ADD EVIDENCE & READINESS */}
             {activeTab === 'evidence' && (
-              <form onSubmit={handleAddEvidence} className="silver-frame p-5 space-y-4 motion-panel">
-                <div className="flex items-center justify-between stagger-item" style={{ '--reveal-delay': '40ms' } as React.CSSProperties}>
-                  <div className="space-y-0.5">
-                    <h3 className="font-bold text-[#eef0f2] text-sm sm:text-base">Submit Evidence</h3>
-                    <p className="text-xs text-[#9fa5b0]">Up to 3 entries per party (&le;1200 chars each)</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-[#6c727d] uppercase tracking-wider block">Your Role</span>
-                    <span className="font-mono text-xs font-bold text-stone-200">
-                      {currentRole === 'PARTY_1' ? 'Party 1 (Opener)' : currentRole === 'PARTY_2' ? 'Party 2 (Opposing)' : 'Observer'}
-                    </span>
-                  </div>
-                </div>
-
-                {evidenceError && (
-                  <div className="p-3 bg-rose-950/30 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2 reveal-up">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
-                    <span>{evidenceError}</span>
-                  </div>
-                )}
-
-                {evidenceSuccessMsg && (
-                  <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-start gap-2 reveal-up">
-                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
-                    <span>{evidenceSuccessMsg}</span>
-                  </div>
-                )}
-
-                {isConnected && currentRole === 'OBSERVER' && (
-                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300/90 leading-relaxed reveal-fade">
-                    Connected address is neither Opener nor Opposing party on this case. Switch wallet to Party 1 or Party 2 to submit evidence.
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  <div className="stagger-item" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
-                    <label className="block text-xs font-medium text-[#9fa5b0] mb-1">Target Case ID</label>
-                    <input
-                      type="text"
-                      value={evidenceCaseId}
-                      onChange={(e) => setEvidenceCaseId(e.target.value)}
-                      placeholder="12-char Case ID"
-                      className="silver-input w-full text-xs font-mono p-2 rounded-lg"
-                      required
-                    />
-                  </div>
-
-                  <div className="stagger-item" style={{ '--reveal-delay': '140ms' } as React.CSSProperties}>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-medium text-[#9fa5b0]">Verifiable Facts &amp; Quotes</label>
-                      <span className={`text-[11px] font-mono transition-colors ${evidenceText.length > 1200 ? 'text-rose-400 font-bold' : 'text-[#6c727d]'}`}>
-                        {evidenceText.length} / 1200
+              <div className="silver-frame p-5 space-y-4 motion-panel">
+                <form onSubmit={handleAddEvidence} className="space-y-4">
+                  <div className="flex items-center justify-between stagger-item" style={{ '--reveal-delay': '40ms' } as React.CSSProperties}>
+                    <div className="space-y-0.5">
+                      <h3 className="font-bold text-[#eef0f2] text-sm sm:text-base">Evidence &amp; Readiness</h3>
+                      <p className="text-xs text-[#9fa5b0]">Up to 3 entries/party (&le;1200 chars), then Mark ready</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-[#6c727d] uppercase tracking-wider block">Your Role</span>
+                      <span className="font-mono text-xs font-bold text-stone-200">
+                        {currentRole === 'PARTY_1'
+                          ? 'Party 1 (Opener)'
+                          : currentRole === 'PARTY_2'
+                            ? 'Party 2 (Opposing)'
+                            : 'Observer (Read-Only)'}
                       </span>
                     </div>
-                    <textarea
-                      rows={4}
-                      value={evidenceText}
-                      onChange={(e) => setEvidenceText(e.target.value)}
-                      placeholder="Enter factual statements, git commit citations, or deployment records..."
-                      className="silver-input w-full text-xs p-2.5 rounded-lg leading-relaxed"
-                      required
-                    />
+                  </div>
+
+                  {evidenceError && (
+                    <div className="p-3 bg-rose-950/30 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2 reveal-up">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                      <span>{evidenceError}</span>
+                    </div>
+                  )}
+
+                  {evidenceSuccessMsg && (
+                    <div className="p-3 bg-emerald-950/30 border border-emerald-500/30 rounded-xl text-xs text-emerald-300 flex items-start gap-2 reveal-up">
+                      <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
+                      <span>{evidenceSuccessMsg}</span>
+                    </div>
+                  )}
+
+                  {addEvidenceDisabledReason && (
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300/90 leading-relaxed flex items-start gap-2">
+                      <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" />
+                      <span>{addEvidenceDisabledReason}</span>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <div className="stagger-item" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
+                      <label className="block text-xs font-medium text-[#9fa5b0] mb-1">Target Case ID</label>
+                      <input
+                        type="text"
+                        value={evidenceCaseId}
+                        onChange={(e) => setEvidenceCaseId(e.target.value)}
+                        placeholder="12-char Case ID"
+                        className="silver-input w-full text-xs font-mono p-2 rounded-lg"
+                        required
+                      />
+                    </div>
+
+                    <div className="stagger-item" style={{ '--reveal-delay': '140ms' } as React.CSSProperties}>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-medium text-[#9fa5b0]">Verifiable Facts &amp; Quotes</label>
+                        <span className={`text-[11px] font-mono transition-colors ${evidenceText.length > 1200 ? 'text-rose-400 font-bold' : 'text-[#6c727d]'}`}>
+                          {evidenceText.length} / 1200
+                        </span>
+                      </div>
+                      <textarea
+                        rows={4}
+                        value={evidenceText}
+                        onChange={(e) => setEvidenceText(e.target.value)}
+                        placeholder="Enter factual statements, git commit citations, or deployment records..."
+                        className="silver-input w-full text-xs p-2.5 rounded-lg leading-relaxed"
+                        disabled={Boolean(addEvidenceDisabledReason)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="stagger-item pt-1" style={{ '--reveal-delay': '200ms' } as React.CSSProperties}>
+                    <button
+                      type="submit"
+                      disabled={Boolean(addEvidenceDisabledReason) || evidenceText.trim().length === 0 || evidenceText.length > 1200}
+                      title={addEvidenceDisabledReason || 'Submit evidence entry to on-chain storage'}
+                      className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-xs"
+                    >
+                      {!isConnected ? 'Connect Wallet' : 'Add evidence'}
+                    </button>
+                  </div>
+                </form>
+
+                {/* Readiness & Evidence Closing Controls inside Evidence Tab */}
+                <div className="pt-3 border-t border-white/[0.08] space-y-2.5">
+                  <div className="text-[11px] font-bold text-stone-300 uppercase tracking-wider">
+                    Readiness &amp; Closing Protocol
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleMarkReady(inspectedCaseId)}
+                      disabled={!canMarkReady}
+                      title={
+                        !isParty
+                          ? 'Only Party 1 or Party 2 may mark ready'
+                          : myReady
+                            ? 'You already marked ready for this round'
+                            : myEvidenceCount < 1
+                              ? 'Submit at least 1 evidence entry before marking ready'
+                              : evidenceWindowExpired
+                                ? 'Evidence window has expired; use Close evidence instead'
+                                : 'Declare your evidence complete for this round'
+                      }
+                      className="py-2 px-3 rounded-xl text-xs font-bold btn-silver-glass cursor-pointer disabled:opacity-40"
+                    >
+                      {myReady ? 'Marked Ready' : 'Mark ready'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleCloseEvidence(inspectedCaseId)}
+                      disabled={!canCloseEvidence}
+                      title={
+                        !isParty
+                          ? 'Only Party 1 or Party 2 may close evidence'
+                          : !evidenceWindowExpired
+                            ? 'Available only after the 10-minute evidence deadline expires'
+                            : totalEvidenceCount < 1
+                              ? 'At least 1 evidence entry on record is required to close'
+                              : 'Close evidence window after deadline so judging can proceed'
+                      }
+                      className="py-2 px-3 rounded-xl text-xs font-bold btn-silver-glass cursor-pointer disabled:opacity-40"
+                    >
+                      Close evidence
+                    </button>
                   </div>
                 </div>
-
-                <div className="stagger-item pt-1" style={{ '--reveal-delay': '200ms' } as React.CSSProperties}>
-                  <button
-                    type="submit"
-                    disabled={!isConnected || evidenceText.length === 0 || evidenceText.length > 1200 || currentRole === 'OBSERVER'}
-                    className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-xs"
-                  >
-                    {!isConnected ? 'Connect Wallet' : 'Submit Evidence Entry'}
-                  </button>
-                </div>
-              </form>
+              </div>
             )}
 
             {/* TAB 4: JUDGE ACTION */}
@@ -1130,14 +1403,29 @@ export const AppWorkbench: React.FC = () => {
                 <div className="space-y-1 stagger-item" style={{ '--reveal-delay': '40ms' } as React.CSSProperties}>
                   <h3 className="font-bold text-[#eef0f2] text-sm sm:text-base">Execute Judge Consensus</h3>
                   <p className="text-xs text-[#9fa5b0]">
-                    Triggers dual-pass non-deterministic LLM evaluation under validator consensus.
+                    Restricted to Party 1 or Party 2 when case status is CLOSED.
                   </p>
                 </div>
 
-                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2 reveal-up" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
-                  <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span className="font-semibold">Ready to run mirrored adjudication</span>
-                </div>
+                {activeStatus === 'CLOSED' ? (
+                  <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2 reveal-up">
+                    <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span className="font-semibold">Evidence is CLOSED -- ready for party-triggered judging</span>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-center gap-2 reveal-up">
+                    <Info className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>
+                      Current status is <strong>{activeStatus}</strong>. Judging requires status <strong>CLOSED</strong> (both parties mark ready, or close_evidence after the 10m window).
+                    </span>
+                  </div>
+                )}
+
+                {!isParty && (
+                  <div className="p-3 rounded-lg bg-rose-950/30 border border-rose-500/30 text-xs text-rose-300">
+                    Only Party 1 or Party 2 may trigger judging.
+                  </div>
+                )}
 
                 <div className="p-3.5 rounded-xl silver-frame-inset space-y-2 text-xs stagger-item" style={{ '--reveal-delay': '120ms' } as React.CSSProperties}>
                   <div className="flex items-center justify-between">
@@ -1145,47 +1433,30 @@ export const AppWorkbench: React.FC = () => {
                     <span className="font-mono font-bold text-[#eef0f2]">{inspectedCaseId || 'None'}</span>
                   </div>
                   <div className="flex items-center justify-between">
+                    <span className="text-[#9fa5b0]">Lifecycle Status:</span>
+                    <span className="font-mono font-bold text-[#eef0f2]">{activeStatus}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
                     <span className="text-[#9fa5b0]">Submitted Evidence:</span>
-                    <span className="font-mono text-[#eef0f2]">{caseRecord?.evidence?.length || 0} entries</span>
+                    <span className="font-mono text-[#eef0f2]">
+                      {totalEvidenceCount} entries (P1: {p1EvidenceCount}, P2: {p2EvidenceCount})
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[#9fa5b0]">Adjudication Rounds:</span>
-                    <span className="font-mono text-[#eef0f2]">{caseRecord?.rounds?.length || 0} completed</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2 pt-1 stagger-item" style={{ '--reveal-delay': '160ms' } as React.CSSProperties}>
-                  <div className="text-[11px] font-bold text-stone-400 uppercase tracking-wider">
-                    Adjudication Process Sequence:
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <div className="p-2.5 rounded-lg silver-frame-inset border border-white/[0.08] space-y-1">
-                      <div className="font-mono font-bold text-stone-200 text-[11px]">01 / Canonical Pass</div>
-                      <div className="text-[11px] text-[#9fa5b0]">Evaluates facts with Party 1 in primary position</div>
-                    </div>
-                    <div className="p-2.5 rounded-lg silver-frame-inset border border-white/[0.08] space-y-1">
-                      <div className="font-mono font-bold text-stone-200 text-[11px]">02 / Mirrored Pass</div>
-                      <div className="text-[11px] text-[#9fa5b0]">Systematically inverts parties to detect order bias</div>
-                    </div>
-                    <div className="p-2.5 rounded-lg silver-frame-inset border border-white/[0.08] space-y-1">
-                      <div className="font-mono font-bold text-stone-200 text-[11px]">03 / Validator Consensus</div>
-                      <div className="text-[11px] text-[#9fa5b0]">Independent GenVM nodes agree on stability delta</div>
-                    </div>
-                    <div className="p-2.5 rounded-lg silver-frame-inset border border-white/[0.08] space-y-1">
-                      <div className="font-mono font-bold text-stone-200 text-[11px]">04 / Read Certificate</div>
-                      <div className="text-[11px] text-[#9fa5b0]">Issues position-invariant stability certificate</div>
-                    </div>
+                    <span className="font-mono text-[#eef0f2]">{roundsCount} / {caseRecord?.max_rounds || 3}</span>
                   </div>
                 </div>
 
                 <div className="stagger-item pt-1" style={{ '--reveal-delay': '220ms' } as React.CSSProperties}>
                   <button
                     onClick={() => handleTriggerJudge(inspectedCaseId)}
-                    disabled={!isConnected || !inspectedCaseId}
+                    disabled={!canJudge || !inspectedCaseId}
+                    title={!isParty ? 'Only Party 1 or Party 2 may trigger judging.' : activeStatus !== 'CLOSED' ? 'Case must be in CLOSED status before judging.' : 'Trigger dual-pass mirrored judging'}
                     className="w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold btn-silver-primary cursor-pointer disabled:opacity-40 shadow-md flex items-center justify-center gap-2"
                   >
                     <Gavel className="w-4 h-4" />
-                    <span>Execute judge({inspectedCaseId.substring(0, 6)}...)</span>
+                    <span>Judge ({inspectedCaseId.substring(0, 6)}...)</span>
                   </button>
                 </div>
               </div>
@@ -1198,18 +1469,19 @@ export const AppWorkbench: React.FC = () => {
               {/* Header: Title and refresh */}
               <div className="flex items-start justify-between gap-4 pb-4 border-b border-white/[0.08]">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="silver-pill text-xs font-mono px-2 py-0.5 rounded font-semibold text-stone-300 motion-badge">
                       ID: {inspectedCaseId}
                     </span>
-                    {caseRecord && (
-                      <span className="text-xs px-2 py-0.5 rounded font-bold bg-white/[0.06] border border-white/[0.10] text-[#eef0f2] motion-badge">
-                        Status: {caseRecord.status}
-                      </span>
-                    )}
+                    <span className="text-xs px-2 py-0.5 rounded font-bold bg-white/[0.06] border border-white/[0.10] text-[#eef0f2] motion-badge">
+                      Status: {isReopenedRound ? `OPEN (Evidence reopened for Round ${roundsCount + 1})` : activeStatus}
+                    </span>
+                    <span className="text-[11px] font-mono text-[#6c727d]">
+                      Schema {certificate?.schema_version || caseRecord?.schema_version || '2.0.0'}
+                    </span>
                   </div>
                   <h2 className="text-xl sm:text-2xl font-bold text-[#eef0f2] leading-tight">
-                    {caseRecord?.title || 'Stability Certificate'}
+                    {caseRecord?.title || certificate?.title || 'Stability Certificate'}
                   </h2>
                 </div>
 
@@ -1222,6 +1494,188 @@ export const AppWorkbench: React.FC = () => {
                   <RefreshCw className={`w-4 h-4 ${loadingCase ? 'animate-spin text-white' : ''}`} />
                 </button>
               </div>
+
+              {/* 4-Phase Lifecycle Bar / Stepper */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-[#9fa5b0]">
+                  <span className="font-bold uppercase tracking-wider text-stone-300">4-Phase Dispute Lifecycle</span>
+                  <span className="font-mono">
+                    Role: {currentRole === 'PARTY_1' ? 'Party 1' : currentRole === 'PARTY_2' ? 'Party 2' : 'Observer (Read-Only)'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" data-testid="lifecycle-stepper">
+                  {lifecycleSteps.map((step, idx) => {
+                    const isCurrent = activeStatus === step.key;
+                    const stepIndex = lifecycleSteps.findIndex((s) => s.key === activeStatus);
+                    const isPassed = idx < stepIndex;
+                    return (
+                      <div
+                        key={step.key}
+                        className={`p-2.5 rounded-xl border text-left transition ${
+                          isCurrent
+                            ? 'bg-white/[0.12] border-white/[0.30] text-white shadow-xs'
+                            : isPassed
+                              ? 'bg-emerald-950/20 border-emerald-500/25 text-emerald-300'
+                              : 'bg-[#121417]/60 border-white/[0.07] text-[#6c727d]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between text-xs font-mono font-bold">
+                          <span>0{idx + 1} / {step.title}</span>
+                          {isCurrent && <span className="w-2 h-2 rounded-full bg-emerald-400"></span>}
+                        </div>
+                        <div className="text-[11px] mt-0.5 leading-snug opacity-90">{step.subtitle}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Reopened Round Notice (when status === 'OPEN' and rounds.length > 0) */}
+              {isReopenedRound && (
+                <div className="p-4 rounded-xl bg-amber-950/35 border border-amber-500/40 text-xs sm:text-sm text-amber-200 space-y-1 reveal-up" data-testid="reopened-round-banner">
+                  <div className="font-bold text-amber-300 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>OPEN (Evidence reopened for Round {roundsCount + 1})</span>
+                  </div>
+                  <p className="leading-relaxed">
+                    Round {roundsCount} was UNSTABLE -- evidence reopened for Round {roundsCount + 1} with a fresh 10-minute window. Both parties must mark ready again (or wait for the deadline) before re-judging.
+                  </p>
+                </div>
+              )}
+
+              {/* Phase-Specific Protocol Panel */}
+              {activeStatus === 'OPEN' && caseRecord && (
+                <div className="p-4 rounded-xl silver-frame-inset space-y-3 border border-white/[0.10]" data-testid="evidence-window-panel">
+                  <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <span className="font-bold text-stone-200 uppercase tracking-wider">
+                      Phase 1: Evidence &amp; Readiness Window ({EVIDENCE_WINDOW_SECONDS / 60}m)
+                    </span>
+                    <span className="font-mono text-[11px] px-2.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.10] text-stone-200">
+                      {evidenceWindowExpired
+                        ? 'Window expired -- either party may close evidence'
+                        : `${formatCountdown(evidenceRemainingSec)} remaining`}
+                    </span>
+                  </div>
+
+                  <div className="text-xs text-[#9fa5b0] font-mono">
+                    Evidence Deadline: {formatUtcTimestamp(evidenceDeadlineTs)} (unix: {evidenceDeadlineTs})
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className={`p-2.5 rounded-lg border ${readyFlags.PARTY_1 ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-300' : 'bg-[#121417]/80 border-white/[0.08] text-stone-300'}`}>
+                      <span className="font-semibold">
+                        Party 1: {readyFlags.PARTY_1 ? `Ready (${p1EvidenceCount} items)` : `Submitting (${p1EvidenceCount}/3 items)`}
+                      </span>
+                    </div>
+                    <div className={`p-2.5 rounded-lg border ${readyFlags.PARTY_2 ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-300' : 'bg-[#121417]/80 border-white/[0.08] text-stone-300'}`}>
+                      <span className="font-semibold">
+                        Party 2: {readyFlags.PARTY_2 ? `Ready (${p2EvidenceCount} items)` : `Submitting (${p2EvidenceCount}/3 items)`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleMarkReady(inspectedCaseId)}
+                      disabled={!canMarkReady}
+                      className="py-1.5 px-3.5 rounded-lg text-xs font-bold btn-silver-primary cursor-pointer disabled:opacity-40"
+                    >
+                      Mark ready
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCloseEvidence(inspectedCaseId)}
+                      disabled={!canCloseEvidence}
+                      className="py-1.5 px-3.5 rounded-lg text-xs font-semibold btn-silver-glass cursor-pointer disabled:opacity-40"
+                    >
+                      Close evidence
+                    </button>
+                    {!isParty && (
+                      <span className="text-[11px] text-[#6c727d] self-center">
+                        Connect as Party 1 or Party 2 to submit evidence, mark ready, or close the window.
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeStatus === 'CLOSED' && caseRecord && (
+                <div className="p-4 rounded-xl silver-frame-inset space-y-3 border border-white/[0.10]" data-testid="judging-panel">
+                  <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <span className="font-bold text-stone-200 uppercase tracking-wider">
+                      Phase 2: Evidence Closed -- Ready for Judging
+                    </span>
+                    <span className="font-mono text-[11px] text-[#9fa5b0]">
+                      Closed at: {formatUtcTimestamp(caseRecord.closed_at_ts)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-xs text-[#9fa5b0]">
+                      {isParty
+                        ? 'You are a party to this dispute and may now trigger dual-pass mirrored judging.'
+                        : 'Only Party 1 or Party 2 may trigger judging.'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerJudge(inspectedCaseId)}
+                      disabled={!canJudge}
+                      className="py-1.5 px-4 rounded-lg text-xs font-bold btn-silver-primary cursor-pointer disabled:opacity-40 flex items-center gap-1.5"
+                    >
+                      <Gavel className="w-3.5 h-3.5" />
+                      <span>Judge</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeStatus === 'JUDGED' && caseRecord && (
+                <div className="p-4 rounded-xl silver-frame-inset space-y-3 border border-white/[0.10]" data-testid="finalization-panel">
+                  <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <span className="font-bold text-stone-200 uppercase tracking-wider">
+                      Phase 3: Certificate Review &amp; Acknowledgment ({FINALIZE_WINDOW_SECONDS / 60}m Window)
+                    </span>
+                    <span className="font-mono text-[11px] px-2.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.10] text-stone-200">
+                      {finalizeWindowExpired
+                        ? 'Review window elapsed -- acknowledging party may close to FINAL'
+                        : `Review window: ${formatCountdown(finalizeRemainingSec)} remaining`}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className={`p-2.5 rounded-lg border ${finalAcks.PARTY_1 ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-300' : 'bg-[#121417]/80 border-white/[0.08] text-stone-300'}`}>
+                      <span className="font-semibold">
+                        Party 1: {finalAcks.PARTY_1 ? 'Acknowledged' : 'Awaiting ack'}
+                      </span>
+                    </div>
+                    <div className={`p-2.5 rounded-lg border ${finalAcks.PARTY_2 ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-300' : 'bg-[#121417]/80 border-white/[0.08] text-stone-300'}`}>
+                      <span className="font-semibold">
+                        Party 2: {finalAcks.PARTY_2 ? 'Acknowledged' : 'Awaiting ack'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleFinalizeCase(inspectedCaseId)}
+                      disabled={!canFinalize}
+                      className="py-1.5 px-4 rounded-lg text-xs font-bold btn-silver-primary cursor-pointer disabled:opacity-40"
+                    >
+                      {!isParty
+                        ? 'Acknowledge and close (Party only)'
+                        : myFinalAck && !finalizeWindowExpired
+                          ? `Acknowledged -- waiting for counterparty or review window (${formatCountdown(finalizeRemainingSec)})`
+                          : otherFinalAck || finalizeWindowExpired
+                            ? 'Acknowledge and close'
+                            : 'Acknowledge verdict'}
+                    </button>
+                    <span className="text-[11px] text-[#6c727d]">
+                      Reaches FINAL when both parties acknowledge or 5m after 1st acknowledgment.
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Error indicator */}
               {caseLoadError && (
@@ -1399,7 +1853,12 @@ export const AppWorkbench: React.FC = () => {
               {caseRecord && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs stagger-item" style={{ '--reveal-delay': '250ms' } as React.CSSProperties}>
                   <div className="p-3 rounded-lg silver-frame-inset space-y-1">
-                    <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">Party 1</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Party 1 (Opener)</span>
+                      <span className="text-[10px] font-mono text-[#9fa5b0]">
+                        Ready: {readyFlags.PARTY_1 ? 'Yes' : 'No'} | Ack: {finalAcks.PARTY_1 ? 'Yes' : 'No'}
+                      </span>
+                    </div>
                     <span className="font-mono text-[#eef0f2] block truncate" title={caseRecord.opener}>
                       {caseRecord.opener}
                     </span>
@@ -1409,7 +1868,12 @@ export const AppWorkbench: React.FC = () => {
                   </div>
 
                   <div className="p-3 rounded-lg silver-frame-inset space-y-1">
-                    <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">Party 2</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Party 2 (Opposing)</span>
+                      <span className="text-[10px] font-mono text-[#9fa5b0]">
+                        Ready: {readyFlags.PARTY_2 ? 'Yes' : 'No'} | Ack: {finalAcks.PARTY_2 ? 'Yes' : 'No'}
+                      </span>
+                    </div>
                     <span className="font-mono text-[#eef0f2] block truncate" title={caseRecord.opposing}>
                       {caseRecord.opposing}
                     </span>
@@ -1420,38 +1884,44 @@ export const AppWorkbench: React.FC = () => {
                 </div>
               )}
 
-              {/* Secondary Actions: Downstream Consumer & Case Finalize (compact, placed lower) */}
+              {/* Downstream Consumer Settlement Panel */}
               <div className="pt-3 border-t border-white/[0.08] space-y-3 reveal-fade" style={{ '--reveal-delay': '300ms' } as React.CSSProperties}>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 text-stone-400">
+                <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 text-stone-300 font-semibold">
                     <Building className="w-3.5 h-3.5" />
-                    <span>Downstream Consumer Integration</span>
+                    <span>Downstream Consumer Settlement</span>
                   </div>
-                  <span className="font-mono text-[11px] text-[#6c727d]">
-                    {consumerOutcome ? `Outcome: ${consumerOutcome}` : 'Pending'}
-                  </span>
+                  <div className="flex items-center gap-2 font-mono text-[11px]">
+                    <span className="text-[#9fa5b0]">
+                      outcome_for_consumer: <strong className="text-white">{certificate?.outcome || consumerOutcome || 'PENDING'}</strong>
+                    </span>
+                    {consumerSettlement && (
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold">
+                        {consumerSettlement}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {caseRecord?.status === 'JUDGED' && (
-                    <button
-                      onClick={() => handleFinalizeCase(inspectedCaseId)}
-                      disabled={!isConnected}
-                      className="py-1.5 px-3 rounded-lg text-xs font-semibold btn-silver-glass cursor-pointer"
-                    >
-                      Close Dispute (finalize)
-                    </button>
-                  )}
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleConsumerSettle(inspectedCaseId)}
+                    disabled={!canSettleConsumer}
+                    className="py-1.5 px-3.5 rounded-lg text-xs font-semibold btn-silver-glass cursor-pointer disabled:opacity-40"
+                  >
+                    {consumerSettlement ? `Settled: ${consumerSettlement}` : 'Settle on Consumer'}
+                  </button>
 
-                  {certificate?.is_decided && !consumerSettlement && (
-                    <button
-                      onClick={() => handleConsumerSettle(inspectedCaseId)}
-                      disabled={!isConnected}
-                      className="py-1.5 px-3 rounded-lg text-xs font-semibold btn-silver-glass cursor-pointer"
-                    >
-                      Trigger Consumer Settlement
-                    </button>
-                  )}
+                  <span className="text-[11px] text-[#6c727d]">
+                    {consumerSettlement
+                      ? 'Single-settlement consumer record locked on-chain.'
+                      : activeStatus === 'JUDGED'
+                        ? 'Available once the case reaches FINAL'
+                        : activeStatus !== 'FINAL'
+                          ? 'Requires case status FINAL before settlement'
+                          : 'Case is FINAL and ready for consumer settlement'}
+                  </span>
                 </div>
               </div>
             </div>

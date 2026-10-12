@@ -1,43 +1,51 @@
 export const STUDIONET_CHAIN_ID = 61999;
 export const STUDIONET_CHAIN_ID_HEX = '0xf22f';
-export const STUDIONET_NAME = 'GenLayer Studionet';
+export const STUDIONET_NAME = 'GenLayer Studionet (Preview)';
 export const STUDIONET_RPC_URL = 'https://studio.genlayer.com/api';
 export const STUDIONET_EXPLORER_URL = 'https://explorer-studio.genlayer.com';
 
-export const MIRROR_JUDGE_ADDRESS = '0x1343C51732FD1002986Ed3f0Bb9D5C2105A6635D';
-export const CONSUMER_CONTRACT_ADDRESS = '0x4FC86C019ec00Aa911A4D34986e33be2Cd94b837';
+export const MIRROR_JUDGE_ADDRESS = '0x2cb49A03fcc9b8c65E3cd9348826b2d13808d8FE';
+export const CONSUMER_CONTRACT_ADDRESS = '0xEC8B7B09AE03cef02ae42bCD8ba28C530D809251';
 export const CONTRACT_REPO_URL = 'https://github.com/huzyow155/mirrorjudge-genlayer';
 export const DAPP_REPO_URL = 'https://github.com/huzyow155/second-opinion-desk-genlayer';
 
+export const SCHEMA_VERSION = '2.0.0';
+export const EVIDENCE_WINDOW_SECONDS = 600;
+export const FINALIZE_WINDOW_SECONDS = 300;
+
 export const VERIFIED_DEMO_CASES = {
   DEMO_A: {
-    id: '0551168cd4f5',
+    id: '43288877b73b',
     title: 'Freelance Milestone 1 Delivery Verification',
-    description: 'Clear-cut dispute where audited git commit logs and explicit counterparty admission produce a stable single-round victory for Party 1.',
+    description:
+      'Both parties submit evidence and mark ready -> CLOSED -> judge -> both acknowledge -> FINAL -> consumer settles to PARTY_1.',
     expectedDecision: 'DECIDED|PARTY_1|STABLE',
     expectedOutcome: 'PARTY_1',
     category: 'Software Milestone',
   },
   DEMO_B: {
-    id: '4e4a3aa372e6',
+    id: '6df124828b58',
     title: 'Commercial Lease Cleaning Deposit Dispute',
-    description: 'Missing counterparty evidence dispute where missing submissions trigger deterministic INSUFFICIENT resolution without LLM bias.',
+    description:
+      'Party 1 submits evidence and marks ready; Party 2 remains silent across the 600s window -> close_evidence -> deterministic INSUFFICIENT -> FINAL.',
     expectedDecision: 'INSUFFICIENT|NONE|NA',
-    expectedOutcome: 'PENDING',
+    expectedOutcome: 'NO_DECISION',
     category: 'Commercial Lease',
   },
   DEMO_C: {
-    id: '8f128188b6c6',
-    title: 'API Gateway Infrastructure SLA Milestone Dispute',
-    description: 'Balanced dispute with symmetrical assertions where dual-pass mirroring produces a stable SPLIT verdict across validators.',
+    id: 'f9462ef8b2b5',
+    title: 'Cloud Server Infrastructure Uptime SLA Dispute',
+    description:
+      'Symmetrical SLA claims produce a swap-consistent SPLIT verdict; Party 1 acknowledges and closes to FINAL after the 300s review window.',
     expectedDecision: 'DECIDED|SPLIT|STABLE',
     expectedOutcome: 'SPLIT',
     category: 'Infrastructure SLA',
   },
   DEMO_D: {
-    id: 'cbbed41fefc3',
+    id: '19f9bad34102',
     title: 'Cross-Border Escrow & SLA Addendum Attribution Dispute',
-    description: 'Ambiguous addendum attribution where canonical and mirrored passes diverge, producing an UNSTABLE certificate.',
+    description:
+      'Ambiguous addendum attribution where canonical and mirrored passes diverge -> UNSTABLE -> case automatically reopens to OPEN for Round 2.',
     expectedDecision: 'UNSTABLE|NONE|UNSTABLE',
     expectedOutcome: 'PENDING',
     category: 'Escrow Addendum',
